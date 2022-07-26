@@ -20,20 +20,20 @@ def print_information(message: str) -> None:
     print(cli_colors.BLUE + message + cli_colors.RESET)   
     
 def print_paragraph(text: str) -> None:
-    print(f' {text} '.center(cs.CLI_WIDTH, "-"))
+    print(f' {text} '.center(cs.CLI_WIDTH + 10, "-"))
     
 def print_logo() -> None:
     f = Figlet(font='standard', width=cs.CLI_WIDTH + 10, justify='center')
     print(f.renderText(cs.CLI_LOGO_TEXT))
 
 def print_centered_text(label: str, value:str, color:cli_colors = None) -> None:
-    print(cli_colors.BLUE + str(label).center(cs.CLI_WIDTH) + cli_colors.RESET)
+    print(cli_colors.BLUE + str(label).center(cs.CLI_WIDTH + 10) + cli_colors.RESET)
     texts = textwrap.wrap(str(value), cs.CLI_WIDTH - 10)
     for text in texts:
         if color is not None:
-            print(color + text.center(cs.CLI_WIDTH) + cli_colors.RESET)
+            print(color + text.center(cs.CLI_WIDTH + 10) + cli_colors.RESET)
         else:
-            print(text.center(cs.CLI_WIDTH))
+            print(text.center(cs.CLI_WIDTH + 10))
     print()
     
 def print_and_confirm_changes(changes: str) -> bool:

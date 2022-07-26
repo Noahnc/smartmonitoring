@@ -29,6 +29,7 @@ versions:
               static:
                 ZBX_ACTIVE_ALLOW: false
                 ZBX_PASSIVESERVERS: zabbix-proxy-container
+                ZBX_ALLOWKEY: system.run[*]
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container

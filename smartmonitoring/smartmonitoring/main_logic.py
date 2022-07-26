@@ -18,7 +18,7 @@ import helpers.cli_helper as cli
 from helpers.cli_helper import cli_colors
 from models.local_config import LocalConfig, ZabbixProxyContainer, ZabbixMysqlContainer
 from models.update_manifest import UpdateManifest, ContainerConfig
-from handlers.config_handler import ConfigValidationError, ManifestValidationError, ValueNotFoundInConfig, InstalledStackInvalid
+from handlers.config_handler import ConfigValidationError, ManifestValidationError, ValueNotFoundInConfig, InstalledStackInvalid, FileError
 
 PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 
@@ -75,13 +75,13 @@ class MainLogic:
         try:
             self.cfh.get_configs()
             lg.info("Configuration and manifest are valid!")
-        except ConfigValidationError as e:
+        except ConfigValidationError or FileError as e:
             config_valid = False
             config_message = e
             config_color = cli_colors.RED
             manifest_color = None
             manifest_valid = "-"
-            manifest_message = "Skipped because local config is not valid"
+            manifest_message = "Skipped because of error with local config file"
             if debug: raise e
         except ManifestValidationError as e:
             manifest_color = cli_colors.RED
@@ -167,7 +167,7 @@ class MainLogic:
         
         if self.__check_if_deployed():
             config, manifest, status = self.cfh.get_installed_stack()
-            self.__print_deployment_status(manifest.package_version, status, config.update_channel, config.zabbix_proxy_container.hostname)
+            self.__print_deployment_status(manifest.package_version, status, config.update_channel, config.zabbix_proxy_container.proxy_name)
             self.__print_container_status(manifest.containers)
         else:
             self.__print_deployment_status("-", "Not Deployed", "-", "-")

@@ -19,6 +19,8 @@ def restart(silent: bool, verbose: bool):
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Restarting all containers of deployment...")
         main_logic.restart_application()
+    except KeyboardInterrupt:
+        lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         lg.debug(f'Stack trace: ', exc_info=True)
@@ -35,6 +37,8 @@ def validate_config(verbose: bool):
     if verbose: lh.add_console_logger(debug=verbose)
     try:
         main_logic.check_configurations(verbose)
+    except KeyboardInterrupt:
+        lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if not verbose: lg.info('Run the application with the --verbose flag to get more information.')
@@ -51,6 +55,8 @@ def apply_config(verbose: bool, silent: bool):
         main_logic.setup_logging(verbose, False)
         lh.log_start("Applying local configuration file")
         main_logic.validate_and_apply_config(silent)
+    except KeyboardInterrupt:
+        lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         lg.debug(f'Stack trace: ', exc_info=True)
@@ -69,6 +75,8 @@ def deploy(silent: bool, verbose: bool):
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Deploying SmartMonitoring Proxy Application")
         main_logic.deploy_application()
+    except KeyboardInterrupt:
+        lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         lg.debug(f'Stack trace: ', exc_info=True)
@@ -87,6 +95,8 @@ def undeploy(silent: bool, verbose: bool):
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Remove SmartMonitoring Proxy Application")
         main_logic.remove_application()
+    except KeyboardInterrupt:
+        lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         lg.debug(f'Stack trace: ', exc_info=True)
@@ -106,6 +116,8 @@ def update(silent: bool, verbose: bool, force: bool):
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Updating SmartMonitoring Application")
         main_logic.update_application(force)
+    except KeyboardInterrupt:
+        lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         lg.debug(f'Stack trace: ', exc_info=True)
@@ -123,6 +135,8 @@ def status(verbose: bool):
         lh.add_console_logger(debug=verbose, level="ERROR")
         lh.log_start("Read and print status of Application")
         main_logic.print_status()
+    except KeyboardInterrupt:
+        lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         lg.debug(f'Stack trace: ', exc_info=True)

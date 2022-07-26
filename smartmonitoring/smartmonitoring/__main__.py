@@ -1,8 +1,8 @@
-import console_cli
+import cli
 
 
-def cli_entypoint():
-    console_cli.main()
+def entypoint():
+    cli.main()
     
 if __name__ == "__main__":
-    cli_entypoint()
+    entypoint()
