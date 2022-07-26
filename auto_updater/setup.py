@@ -8,7 +8,7 @@ setup(
     name='smartmonitoring',
     description='A Tool to deploy and update SmartMonitoring Proxies',
     version='1.0.0',
-    packages=find_packages(),
+    packages = {'smartmonitoring'},
     install_requires=[
         'requests',
         'click',
@@ -26,7 +26,7 @@ setup(
         smartmonitoring=smartmonitoring.__main__:cli
     ''',
     author="Noah Canadea",
-    url='https://github.com/CITGuru/cver',
+    url='https://github.com/Noahnc/smartmonitoring',
     download_url='https://github.com/CITGuru/cver/archive/1.0.0.tar.gz',
     author_email='noah@canadea.ch',
     classifiers=[
