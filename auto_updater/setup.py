@@ -20,7 +20,7 @@ setup(
         'termcolor',
         'deepdiff',
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.9',
     entry_points='''
         [console_scripts]
         smartmonitoring=smartmonitoring.__main__:cli
