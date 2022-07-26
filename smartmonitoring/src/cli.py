@@ -5,12 +5,15 @@ from main_logic import MainLogic
 import helpers.helper_functions as hf
 import click
 
+
 @click.group()
 def main():
     pass
 
+
 @main.command()
-@click.option("-s", "--silent", is_flag=True, default=False, help="Specify if you want to run the application in interactive mode")
+@click.option("-s", "--silent", is_flag=True, default=False,
+              help="Specify if you want to run the application in interactive mode")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def restart(silent: bool, verbose: bool):
     """Restarts all Containers of the current deployment."""
@@ -29,6 +32,7 @@ def restart(silent: bool, verbose: bool):
     finally:
         lh.log_finish()
 
+
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def validate_config(verbose: bool):
@@ -45,9 +49,11 @@ def validate_config(verbose: bool):
         lg.debug(e, exc_info=True)
     pass
 
+
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
-@click.option("-s", "--silent", is_flag=True, default=False, help="Specify if you want to run the application in interactive mode")
+@click.option("-s", "--silent", is_flag=True, default=False,
+              help="Specify if you want to run the application in interactive mode")
 def apply_config(verbose: bool, silent: bool):
     """Validates the local configuration file and applies it if valid."""
     try:
@@ -65,8 +71,10 @@ def apply_config(verbose: bool, silent: bool):
     finally:
         lh.log_finish()
 
+
 @main.command()
-@click.option("-s", "--silent", is_flag=True, default=False, help="Specify if you want to run the application in interactive mode")
+@click.option("-s", "--silent", is_flag=True, default=False,
+              help="Specify if you want to run the application in interactive mode")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def deploy(silent: bool, verbose: bool):
     """Deploys the SmartMonitoring Proxy Application on this System."""
@@ -84,9 +92,11 @@ def deploy(silent: bool, verbose: bool):
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
-         
+
+
 @main.command()
-@click.option("-s", "--silent", is_flag=True, default=False, help="Specify if you want to run the application in interactive mode")
+@click.option("-s", "--silent", is_flag=True, default=False,
+              help="Specify if you want to run the application in interactive mode")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def undeploy(silent: bool, verbose: bool):
     """Removes the SmartMonitoring Application from this system."""
@@ -105,10 +115,13 @@ def undeploy(silent: bool, verbose: bool):
     finally:
         lh.log_finish()
 
+
 @main.command()
-@click.option("-s", "--silent", is_flag=True, default=False, help="Specify if you want to run the application in interactive mode")
+@click.option("-s", "--silent", is_flag=True, default=False,
+              help="Specify if you want to run the application in interactive mode")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
-@click.option("-f", "--force", is_flag=True, default=False, help="Applies the remote manifest even if it is not newer than the local one")
+@click.option("-f", "--force", is_flag=True, default=False,
+              help="Applies the remote manifest even if it is not newer than the local one")
 def update(silent: bool, verbose: bool, force: bool):
     """Checks if a newer Version is available and updates the Application if so."""
     try:
@@ -125,6 +138,7 @@ def update(silent: bool, verbose: bool, force: bool):
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
+
 
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
