@@ -26,7 +26,7 @@ setup(
     python_requires='>=3.9',
     entry_points='''
         [console_scripts]
-        smartmonitoring=smartmonitoring.__main__:entypoint
+        smartmonitoring=src.__main__:main
     ''',
     author="Noah Canadea",
     url='https://github.com/Noahnc/smartmonitoring',

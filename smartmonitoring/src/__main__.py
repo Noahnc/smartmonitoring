@@ -1,8 +1,8 @@
 import cli
 
 
-def entypoint():
+def main():
     cli.main()
     
 if __name__ == "__main__":
-    entypoint()
+    main()
