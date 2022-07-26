@@ -8,7 +8,10 @@ setup(
     name='smartmonitoring',
     description='A Tool to deploy and update SmartMonitoring Proxies',
     version='1.0.0',
-    packages = {'smartmonitoring'},
+    packages=find_packages(
+        where='.',
+        include=['smartmonitoring*']
+    ),
     install_requires=[
         'requests',
         'click',
@@ -23,7 +26,7 @@ setup(
     python_requires='>=3.9',
     entry_points='''
         [console_scripts]
-        smartmonitoring=smartmonitoring.__main__:cli
+        smartmonitoring=smartmonitoring.__main__:cli_entypoint
     ''',
     author="Noah Canadea",
     url='https://github.com/Noahnc/smartmonitoring',
