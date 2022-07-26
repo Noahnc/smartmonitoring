@@ -1,0 +1,9 @@
+requests
+click
+docker
+packaging
+cerberus
+prettytable
+pyfiglet
+termcolor
+deepdiff
