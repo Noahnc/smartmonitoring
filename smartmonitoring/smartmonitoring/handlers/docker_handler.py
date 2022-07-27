@@ -9,7 +9,7 @@ from docker.models import containers
 
 from docker.types import Mount
 
-from models.update_manifest import ContainerConfig, MappedFile, Port
+from smartmonitoring.models.update_manifest import ContainerConfig, MappedFile, Port
 
 class DockerInstanceUnavailable(Exception):
     pass

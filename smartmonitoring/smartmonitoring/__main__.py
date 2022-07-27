@@ -1,4 +1,4 @@
-import cli
+from smartmonitoring import cli
 
 
 def main():

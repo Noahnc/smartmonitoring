@@ -34,6 +34,7 @@ def to_class(c: Type[T], x: Any) -> dict:
     return cast(Any, x).to_dict()
 
 
+# noinspection PyDictCreation
 @dataclass
 class ZabbixMysqlContainer:
     local_settings: Optional[Dict] = None
@@ -65,6 +66,7 @@ class ZabbixProxyContainer:
         local_settings = obj.get("local_settings")
         return ZabbixProxyContainer(proxy_name, zabbix_server_psk, psk_key_file, local_settings)
 
+    # noinspection PyDictCreation
     def to_dict(self) -> dict:
         result: dict = {}
         result["proxy_name"] = from_str(self.proxy_name)
@@ -74,6 +76,7 @@ class ZabbixProxyContainer:
         return result
 
 
+# noinspection PyDictCreation
 @dataclass
 class LocalConfig:
     update_channel: str

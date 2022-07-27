@@ -1,8 +1,7 @@
-import sys
 import logging as lg
-import helpers.log_helpers as lh
-from main_logic import MainLogic
-import helpers.helper_functions as hf
+import smartmonitoring.helpers.log_helpers as lh
+from smartmonitoring.main_logic import MainLogic
+import smartmonitoring.helpers.helper_functions as hf
 import click
 
 

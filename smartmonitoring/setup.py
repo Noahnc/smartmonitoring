@@ -1,8 +1,4 @@
 from setuptools import setup, find_packages
-from io import open
-from os import path
-import pathlib
-
 
 setup(
     name='smartmonitoring',
@@ -26,7 +22,7 @@ setup(
     python_requires='>=3.9',
     entry_points='''
         [console_scripts]
-        smartmonitoring=src.__main__:main
+        smartmonitoring=smartmonitoring.__main__:main
     ''',
     author="Noah Canadea",
     url='https://github.com/Noahnc/smartmonitoring',

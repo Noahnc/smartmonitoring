@@ -8,12 +8,12 @@ import secrets
 import logging as lg
 from cerberus import Validator
 from deepdiff import DeepDiff
-import helpers.helper_functions as hf
-from models.local_config import LocalConfig
-from models.update_manifest import UpdateManifest, ContainerConfig
+import smartmonitoring.helpers.helper_functions as hf
+from smartmonitoring.models.local_config import LocalConfig
+from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig
 from requests.exceptions import ConnectionError, Timeout, HTTPError
-from const_settings import ConfigDefaults as cfd
-from dict_validation_schemas import ValidationSchemas
+from smartmonitoring.const_settings import ConfigDefaults as cfd
+from smartmonitoring.dict_validation_schemas import ValidationSchemas
 
 class ConfigValidationError(Exception):
     pass
@@ -163,7 +163,7 @@ class ConfigHandler:
         env_variables = {}
         # Pull secret value for each secret of the container from the global dynamic secrets dict
         for key, value in container.config.secrets.items():
-            lg.debug(f'Composing the follwing secrets for container: {container.name}:')
+            lg.debug(f'Composing the following secrets for container: {container.name}:')
             lg.debug(container.config.secrets)
             if value not in cont_secrets:
                 lg.error(f'Secret {value} not found in global dynamic secrets')

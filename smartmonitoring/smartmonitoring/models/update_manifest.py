@@ -1,8 +1,5 @@
 from dataclasses import dataclass
-import imp
-import os
 from typing import Optional, Any, List, Tuple, TypeVar, Type, cast, Callable
-
 
 T = TypeVar("T")
 
@@ -16,9 +13,11 @@ def from_none(x: Any) -> Any:
     assert x is None
     return x
 
+
 def from_bool(x: Any) -> bool:
     assert isinstance(x, bool)
     return x
+
 
 def from_union(fs, x):
     for f in fs:
@@ -75,6 +74,7 @@ class Config:
         result["secrets"] = self.secrets
         return result
 
+
 @dataclass
 class MappedFile:
     name: str
@@ -95,7 +95,8 @@ class MappedFile:
         result["host_path"] = from_str(self.host_path)
         result["container_path"] = from_str(self.container_path)
         return result
-    
+
+
 @dataclass
 class Port:
     host_port: str
@@ -116,6 +117,7 @@ class Port:
         result["container_port"] = from_int(self.container_port)
         result["protocol"] = from_str(self.protocol)
         return result
+
 
 @dataclass
 class ContainerConfig:
@@ -171,4 +173,3 @@ class UpdateManifest:
         result["containers"] = from_list(lambda x: to_class(ContainerConfig, x), self.containers)
         result["dynamic_secrets"] = from_union([lambda x: from_list(from_str, x), from_none], self.dynamic_secrets)
         return result
-

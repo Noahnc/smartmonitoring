@@ -1,8 +1,8 @@
-import const_settings as cs
-from pyfiglet import Figlet
 import textwrap
 
-from termcolor import colored
+import smartmonitoring.const_settings as cs
+from pyfiglet import Figlet
+
 
 class cli_colors:
     BLUE = '\x1b[38;5;39m'

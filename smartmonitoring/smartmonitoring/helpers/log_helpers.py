@@ -4,7 +4,7 @@ import os
 import socket
 import time
 from datetime import datetime
-import const_settings as cs
+import smartmonitoring.const_settings as cs
 import __init__
 
 start_time = None

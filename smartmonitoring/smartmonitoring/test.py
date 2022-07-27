@@ -1,20 +1,8 @@
-from itertools import count
-import logging as lg
 import os
-import sys
+
 import const_settings as cs
-from pathlib import Path
-from handlers.config_handler import ConfigHandler, ValueNotFoundInConfig
-import helpers.cli_helper as clh
-from deepdiff import DeepDiff
-import yaml
-import docker
-from docker.types import Mount
-
+from handlers.config_handler import ConfigHandler
 from main_logic import MainLogic
-
-
-
 
 debug = False
 silent = False

@@ -1,24 +1,25 @@
-import sys
-import socket
 import logging as lg
-from pyfiglet import Figlet
-import prettytable
-import __init__
-from models.update_manifest import MappedFile
-from pkg_resources import parse_version
-import helpers.log_helpers as lh
 import os
+import socket
+import sys
+from pathlib import Path
+
+import prettytable
+from packaging import version
+
+import __init__
 import const_settings as cs
-import helpers.helper_functions as hf
+import helpers.log_helpers as lh
+import smartmonitoring.helpers.cli_helper as cli
+import smartmonitoring.helpers.helper_functions as hf
 from handlers.config_handler import ConfigHandler
 from handlers.docker_handler import DockerHandler
-from packaging import version
-from pathlib import Path
-import helpers.cli_helper as cli
-from helpers.cli_helper import cli_colors
-from models.local_config import LocalConfig, ZabbixProxyContainer, ZabbixMysqlContainer
-from models.update_manifest import UpdateManifest, ContainerConfig
-from handlers.config_handler import ConfigValidationError, ManifestValidationError, ValueNotFoundInConfig, InstalledStackInvalid, FileError
+from smartmonitoring.handlers.config_handler import ConfigValidationError, ManifestValidationError, \
+    ValueNotFoundInConfig, InstalledStackInvalid, FileError
+from smartmonitoring.helpers.cli_helper import cli_colors
+from smartmonitoring.models.local_config import LocalConfig
+from smartmonitoring.models.update_manifest import MappedFile
+from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig
 
 PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 
