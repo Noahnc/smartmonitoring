@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
+from smartmonitoring import __version__
 
 setup(
     name='smartmonitoring',
     description='A Tool to deploy and update SmartMonitoring Proxies',
-    version='1.0.0',
+    version=__version__,
     packages=find_packages(
         where='.',
         include=['smartmonitoring*']

@@ -5,7 +5,7 @@ import socket
 import time
 from datetime import datetime
 import smartmonitoring.const_settings as cs
-import __init__
+from smartmonitoring import __version__
 
 start_time = None
 
@@ -67,7 +67,7 @@ def log_start(action: str):
     lg.info("#")
     lg.info(f'# Action: {action}')
     lg.info(f'# Hostname: {socket.gethostname()}')
-    lg.info(f'# Updater Version: {__init__.__version__}')
+    lg.info(f'# Updater Version: {__version__}')
     lg.info("#")
     
 def log_finish():
