@@ -8,12 +8,12 @@ import prettytable
 from packaging import version
 
 from smartmonitoring import __version__
-import const_settings as cs
-import helpers.log_helpers as lh
+import smartmonitoring.const_settings as cs
+import smartmonitoring.helpers.log_helpers as lh
 import smartmonitoring.helpers.cli_helper as cli
 import smartmonitoring.helpers.helper_functions as hf
-from handlers.config_handler import ConfigHandler
-from handlers.docker_handler import DockerHandler
+from smartmonitoring.handlers.config_handler import ConfigHandler
+from smartmonitoring.handlers.docker_handler import DockerHandler
 from smartmonitoring.handlers.config_handler import ConfigValidationError, ManifestValidationError, \
     ValueNotFoundInConfig, InstalledStackInvalid, FileError
 from smartmonitoring.helpers.cli_helper import cli_colors
