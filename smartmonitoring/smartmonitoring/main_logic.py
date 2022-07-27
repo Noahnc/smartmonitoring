@@ -7,7 +7,7 @@ from pathlib import Path
 import prettytable
 from packaging import version
 
-import __init__
+from smartmonitoring import __version__
 import const_settings as cs
 import helpers.log_helpers as lh
 import smartmonitoring.helpers.cli_helper as cli
@@ -100,11 +100,11 @@ class MainLogic:
         if not debug:
             cli.print_logo()
             cli.print_paragraph("Local Config File")
-            cli.print_centered_text("Valid", config_valid, config_color)
+            cli.print_centered_text("Valid", str(config_valid), config_color)
             cli.print_centered_text("Message", config_message, config_color)
             
             cli.print_paragraph("Update Manifest")
-            cli.print_centered_text("Valid", manifest_valid, manifest_color)
+            cli.print_centered_text("Valid", str(manifest_valid), manifest_color)
             cli.print_centered_text("Message", manifest_message, manifest_color)
 
     def __check_remote_manifest(self, config: LocalConfig, debug: bool) -> tuple[bool, str]:
@@ -297,7 +297,7 @@ class MainLogic:
     def __print_host_information(self):
         cli.print_paragraph("Host Information")
         cli.print_centered_text("Hostname", socket.gethostname())
-        cli.print_centered_text("Updater Version", __init__.__version__)
+        cli.print_centered_text("Updater Version", __version__)
         cli.print_centered_text("IP Address", socket.gethostbyname(socket.gethostname()))
         cli.print_centered_text("Public iP", hf.get_public_ip_address())
         
