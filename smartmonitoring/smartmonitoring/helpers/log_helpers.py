@@ -9,6 +9,7 @@ from smartmonitoring import __version__
 
 start_time = None
 
+
 def setup_file_logger(file: os.path, level: str = "DEBUG", size: int = 50, count: int = 5) -> None:
     log_file_size = size * 1024 * 1024
     main_logger = lg.getLogger()
@@ -25,22 +26,22 @@ def update_file_logger(level: str = None, size: int = None, count: int = None):
     # looking for file handlers
     for handler in main_logger.handlers:
         if isinstance(handler, logging.handlers.RotatingFileHandler):
-            if level is not None: 
+            if level is not None:
                 handler.setLevel(lg.getLevelName(level))
                 message += "- Level: " + level + " "
-            if size is not None: 
+            if size is not None:
                 handler.maxBytes = (size * 1024 * 1024)
-                message += "- Size: " + str((size * 1024 * 1024))  + " "
-            if count is not None: 
+                message += "- Size: " + str((size * 1024 * 1024)) + " "
+            if count is not None:
                 handler.backupCount = count
-                message += "- backupCount: " + str(count) + " " 
+                message += "- backupCount: " + str(count) + " "
     lg.debug(message)
 
 
-def add_console_logger(debug:bool=False, level:str="INFO") -> None:
+def add_console_logger(debug: bool = False, level: str = "INFO") -> None:
     main_logger = lg.getLogger()
     main_logger.setLevel(lg.getLevelName("DEBUG"))
-    if debug: 
+    if debug:
         level = "DEBUG"
     log_format = '%(levelname)s: %(message)s'
     console_logger = lg.StreamHandler()
@@ -50,14 +51,16 @@ def add_console_logger(debug:bool=False, level:str="INFO") -> None:
     lg.debug(f'Settings for console-logger set - Level: {level}')
 
 
-def __get_rotating_file_handler(file: os.path, level: str = "DEBUG", size: int = 50, count: int = 5) -> logging.handlers.RotatingFileHandler:
+def __get_rotating_file_handler(file: os.path, level: str = "DEBUG", size: int = 50,
+                                count: int = 5) -> logging.handlers.RotatingFileHandler:
     log_file_size = size * 1024 * 1024
     format_log = lg.Formatter('%(asctime)s-%(levelname)s %(message)s')
     log_file_handler = logging.handlers.RotatingFileHandler(
-        file, maxBytes=1024*1024*size, backupCount=5)
+        file, maxBytes=1024 * 1024 * size, backupCount=5)
     log_file_handler.setLevel(lg.getLevelName(level))
     log_file_handler.setFormatter(format_log)
     return log_file_handler
+
 
 def log_start(action: str):
     global start_time
@@ -69,9 +72,11 @@ def log_start(action: str):
     lg.info(f'# Hostname: {socket.gethostname()}')
     lg.info(f'# Updater Version: {__version__}')
     lg.info("#")
-    
+
+
 def log_finish():
     lg.info(f' FINISHED AFTER {round(time.time() - start_time, 2)} SECONDS '.center(cs.CLI_WIDTH, '#'))
+
 
 class ColoredLogFormat(logging.Formatter):
     grey = '\x1b[38;21m'

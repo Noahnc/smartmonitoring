@@ -21,13 +21,18 @@ versions:
                 MYSQL_PASSWORD: mysql_password
                 MYSQL_ROOT_PASSWORD: mysql_root_pw
 
-          - name: zabbix_agent2_container
+          - name: zabbix_agent_container
             hostname: zabbix-agent2-container
             image: zabbix/zabbix-agent:6.0-ubuntu-latest
             privileged: true
+            files:
+              - name: status_file
+                host_path: smartmonitoring_status_file
+                host_path_dynamic: true
+                container_path: /var/status.json
             config:
               static:
-                ZBX_ACTIVE_ALLOW: false
+                ZBX_ACTIVE_ALLOW: true
                 ZBX_PASSIVESERVERS: zabbix-proxy-container
                 ZBX_ALLOWKEY: system.run[*]
 
@@ -38,6 +43,7 @@ versions:
             files:
               - name: psk_encryption_key
                 host_path: psk_key_file
+                host_path_dynamic: true
                 container_path: /var/lib/zabbix/ssl/keys/key.psk
             ports:
               - host_port: 10051
@@ -48,7 +54,7 @@ versions:
                 ZBX_HOSTNAME: proxy_name
 
               static:
-                ZBX_SERVER_HOST: "monitoring.smartcollab.ch"
+                ZBX_SERVER_HOST: monitoring.smartcollab.ch
                 MYSQL_USER: zabbix
                 DB_SERVER_HOST: zabbix-mysql-container
                 ZBX_TIMEOUT: 15
@@ -82,14 +88,20 @@ versions:
                 MYSQL_PASSWORD: mysql_password
                 MYSQL_ROOT_PASSWORD: mysql_root_pw
 
-          - name: zabbix_agent2_container
+          - name: zabbix_agent_container
             hostname: zabbix-agent2-container
             image: zabbix/zabbix-agent:6.0-ubuntu-latest
             privileged: true
+            files:
+              - name: status_file
+                host_path: smartmonitoring_status_file
+                host_path_dynamic: true
+                container_path: /var/status.json
             config:
               static:
-                ZBX_ACTIVE_ALLOW: false
+                ZBX_ACTIVE_ALLOW: true
                 ZBX_PASSIVESERVERS: zabbix-proxy-container
+                ZBX_ALLOWKEY: system.run[*]
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
@@ -98,6 +110,7 @@ versions:
             files:
               - name: psk_encryption_key
                 host_path: psk_key_file
+                host_path_dynamic: true
                 container_path: /var/lib/zabbix/ssl/keys/key.psk
             ports:
               - host_port: 10051
@@ -108,7 +121,7 @@ versions:
                 ZBX_HOSTNAME: proxy_name
 
               static:
-                ZBX_SERVER_HOST: "monitoring.smartcollab.ch"
+                ZBX_SERVER_HOST: monitoring.smartcollab.ch
                 MYSQL_USER: zabbix
                 DB_SERVER_HOST: zabbix-mysql-container
                 ZBX_TIMEOUT: 15

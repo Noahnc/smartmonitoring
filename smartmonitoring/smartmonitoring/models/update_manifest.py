@@ -79,6 +79,7 @@ class Config:
 class MappedFile:
     name: str
     host_path: str
+    host_path_dynamic: bool
     container_path: str
 
     @staticmethod
@@ -86,21 +87,23 @@ class MappedFile:
         assert isinstance(obj, dict)
         name = from_str(obj.get("name"))
         host_path = from_str(obj.get("host_path"))
+        host_path_dynamic = from_bool(obj.get("host_path_dynamic"))
         container_path = from_str(obj.get("container_path"))
-        return MappedFile(name, host_path, container_path)
+        return MappedFile(name, host_path, host_path_dynamic, container_path)
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["name"] = from_str(self.name)
         result["host_path"] = from_str(self.host_path)
+        result["host_path_dynamic"] = from_bool(self.host_path_dynamic)
         result["container_path"] = from_str(self.container_path)
         return result
 
 
 @dataclass
 class Port:
-    host_port: str
-    container_port: str
+    host_port: int
+    container_port: int
     protocol: str
 
     @staticmethod

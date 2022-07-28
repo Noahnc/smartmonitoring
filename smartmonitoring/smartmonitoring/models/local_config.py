@@ -51,6 +51,24 @@ class ZabbixMysqlContainer:
         return result
 
 @dataclass
+class ZabbixAgentContainer:
+    smartmonitoring_status_file: str
+    local_settings: Optional[Dict] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'ZabbixAgentContainer':
+        assert isinstance(obj, dict)
+        smartmonitoring_status_file = from_str(obj.get("smartmonitoring_status_file"))
+        local_settings = obj.get("local_settings")
+        return ZabbixAgentContainer(smartmonitoring_status_file, local_settings)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["smartmonitoring_status_file"] = self.smartmonitoring_status_file
+        result["local_settings"] = self.local_settings
+        return result
+
+@dataclass
 class ZabbixProxyContainer:
     proxy_name: str
     zabbix_server_psk: str
@@ -86,6 +104,7 @@ class LocalConfig:
     update_manifest_url: str
     zabbix_proxy_container: ZabbixProxyContainer
     zabbix_mysql_container: Optional[ZabbixMysqlContainer] = None
+    zabbix_agent_container: Optional[ZabbixAgentContainer] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'LocalConfig':
@@ -97,7 +116,8 @@ class LocalConfig:
         update_manifest_url = from_str(obj.get("update_manifest_url"))
         zabbix_proxy_container = ZabbixProxyContainer.from_dict(obj.get("zabbix_proxy_container"))
         zabbix_mysql_container = from_union([ZabbixMysqlContainer.from_dict, from_none], obj.get("zabbix_mysql_container"))
-        return LocalConfig(update_channel, debug_logging, log_file_size_mb, log_file_count, update_manifest_url, zabbix_proxy_container, zabbix_mysql_container)
+        zabbix_agent_container = from_union([ZabbixAgentContainer.from_dict, from_none], obj.get("zabbix_agent_container"))
+        return LocalConfig(update_channel, debug_logging, log_file_size_mb, log_file_count, update_manifest_url, zabbix_proxy_container, zabbix_mysql_container, zabbix_agent_container)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -108,6 +128,7 @@ class LocalConfig:
         result["update_manifest_url"] = from_str(self.update_manifest_url)
         result["zabbix_proxy_container"] = to_class(ZabbixProxyContainer, self.zabbix_proxy_container)
         result["zabbix_mysql_container"] = from_union([lambda x: to_class(ZabbixMysqlContainer, x), from_none], self.zabbix_mysql_container)
+        result["zabbix_agent_container"] = from_union([lambda x: to_class(ZabbixAgentContainer, x), from_none], self.zabbix_agent_container)
         return result
 
 

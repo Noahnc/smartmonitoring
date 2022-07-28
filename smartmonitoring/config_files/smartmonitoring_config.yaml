@@ -1,5 +1,5 @@
 SmartMonitoring_Proxy:
-  update_channel: STABLE # STABLE / TESTING
+  update_channel: TESTING # STABLE / TESTING
   debug_logging: true # Logs as debug if true
   log_file_size_mb: 50 #size of a single log file
   log_file_count: 3 #amount of log files for rotation
@@ -14,6 +14,9 @@ SmartMonitoring_Proxy:
     # Ist die gleiche Variable auch im manifest definiert, hat diese hier immer vorrang.
     #local_settings:
       #ZBX_DEBUGEVEL: 3
+
+  zabbix_agent_container:
+    smartmonitoring_status_file: "/Users/noahcanadea/Documents/GitHub/smartmonitoring/smartmonitoring/temp/smartmonitoring-update-status.json"
 
   #zabbix_mysql_container:
     #local_settings:

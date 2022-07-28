@@ -3,6 +3,7 @@ CLI_WIDTH = 110
 
 # Name of different files
 LOG_FILE_NAME = 'smartmonitoring-helper.log'
+STATUS_FILE_NAME = 'smartmonitoring-update-status.json'
 LOCAL_CONF_FILE_NAME = 'smartmonitoring_config.yaml'
 DEPLOYED_STACK_FILE_NAME = 'installed_stack.json'
 

@@ -1,0 +1,114 @@
+{
+    "manifest": {
+        "package_version": "1.0.1",
+        "containers": [
+            {
+                "name": "zabbix_mysql_container",
+                "hostname": "zabbix-mysql-container",
+                "image": "ubuntu/mysql:8.0-20.04_edge",
+                "privileged": false,
+                "config": {
+                    "dynamic": null,
+                    "static": {
+                        "TZ": "UTC",
+                        "MYSQL_USER": "zabbix",
+                        "MYSQL_DATABASE": "zabbix_proxy"
+                    },
+                    "secrets": {
+                        "MYSQL_PASSWORD": "mysql_password",
+                        "MYSQL_ROOT_PASSWORD": "mysql_root_pw"
+                    }
+                },
+                "files": null,
+                "ports": null
+            },
+            {
+                "name": "zabbix_agent_container",
+                "hostname": "zabbix-agent2-container",
+                "image": "zabbix/zabbix-agent:6.0-ubuntu-latest",
+                "privileged": true,
+                "config": {
+                    "dynamic": null,
+                    "static": {
+                        "ZBX_ACTIVE_ALLOW": true,
+                        "ZBX_PASSIVESERVERS": "zabbix-proxy-container",
+                        "ZBX_ALLOWKEY": "system.run[*]"
+                    },
+                    "secrets": null
+                },
+                "files": [
+                    {
+                        "name": "status_file",
+                        "host_path": "smartmonitoring_status_file",
+                        "host_path_dynamic": true,
+                        "container_path": "/var/status.json"
+                    }
+                ],
+                "ports": null
+            },
+            {
+                "name": "zabbix_proxy_container",
+                "hostname": "zabbix-proxy-container",
+                "image": "noahnc/smartmonitoring-proxy:6.0",
+                "privileged": false,
+                "config": {
+                    "dynamic": {
+                        "ZBX_HOSTNAME": "proxy_name"
+                    },
+                    "static": {
+                        "ZBX_SERVER_HOST": "monitoring.smartcollab.ch",
+                        "MYSQL_USER": "zabbix",
+                        "DB_SERVER_HOST": "zabbix-mysql-container",
+                        "ZBX_TIMEOUT": 15,
+                        "ZBX_STARTPOLLERS": 10,
+                        "ZBX_DEBUGLEVEL": 4,
+                        "ZBX_TLSCONNECT": "psk",
+                        "ZBX_TLSACCEPT": "psk",
+                        "ZBX_TLSPSKIDENTITY": "PSK_KEY",
+                        "ZBX_TLSPSKFILE": "/var/lib/zabbix/ssl/keys/key.psk"
+                    },
+                    "secrets": {
+                        "MYSQL_PASSWORD": "mysql_password"
+                    }
+                },
+                "files": [
+                    {
+                        "name": "psk_encryption_key",
+                        "host_path": "psk_key_file",
+                        "host_path_dynamic": true,
+                        "container_path": "/var/lib/zabbix/ssl/keys/key.psk"
+                    }
+                ],
+                "ports": [
+                    {
+                        "host_port": 10051,
+                        "container_port": 10051,
+                        "protocol": "tcp"
+                    }
+                ]
+            }
+        ],
+        "dynamic_secrets": [
+            "mysql_password",
+            "mysql_root_pw"
+        ]
+    },
+    "config": {
+        "update_channel": "TESTING",
+        "debug_logging": true,
+        "log_file_size_mb": 50,
+        "log_file_count": 3,
+        "update_manifest_url": "https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml",
+        "zabbix_proxy_container": {
+            "proxy_name": "MusterAG-Proxy-Zuerich",
+            "zabbix_server_psk": "dh874zhuihfuidhzfuidhfuidshfuierzhfiuewaurf98eizhtguirezr87zhuerihfiurehzuz",
+            "psk_key_file": "/Users/noahcanadea/Dev/zabbix_enc_key.psk",
+            "local_settings": null
+        },
+        "zabbix_mysql_container": null,
+        "zabbix_agent_container": {
+            "smartmonitoring_status_file": "/Users/noahcanadea/Documents/GitHub/smartmonitoring/smartmonitoring/temp/smartmonitoring-update-status.json",
+            "local_settings": null
+        }
+    }
+}

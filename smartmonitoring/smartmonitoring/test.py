@@ -1,7 +1,7 @@
 import os
 
 import const_settings as cs
-from handlers.config_handler import ConfigHandler
+from handlers.data_handler import DataHandler
 from main_logic import MainLogic
 
 debug = False
@@ -16,7 +16,7 @@ smartmonitoring_var_dir = os.path.join(PARENT_FOLDER, "temp")
 config_file = os.path.join(smartmonitoring_config_dir, cs.LOCAL_CONF_FILE_NAME)
 stack_file = os.path.join(smartmonitoring_var_dir, cs.DEPLOYED_STACK_FILE_NAME)
 
-cfh = ConfigHandler(config_file, stack_file)
+cfh = DataHandler(config_file, stack_file)
 
 cfh.get_configs()
 

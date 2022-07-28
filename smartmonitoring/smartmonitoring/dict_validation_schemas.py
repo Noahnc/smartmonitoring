@@ -46,6 +46,10 @@ class ValidationSchemas:
                                     'required': True,
                                     'type': 'string'
                                 },
+                                'host_path_dynamic': {
+                                    'required': True,
+                                    'type': 'boolean'
+                                },
                                 'container_path': {
                                     'required': True,
                                     'type': 'string'
@@ -168,5 +172,21 @@ class ValidationSchemas:
                             'nullable': True
                         }
                     }
+        },
+        'zabbix_agent_container': {
+            'required': False,
+            'nullable': True,
+            'type': 'dict',
+            'schema': {
+                'smartmonitoring_status_file': {
+                    'required': True,
+                    'type': 'string'
+                },
+                'local_settings': {
+                    'required': False,
+                    'type': 'dict',
+                    'nullable': True
+                }
+            }
         }
     }
