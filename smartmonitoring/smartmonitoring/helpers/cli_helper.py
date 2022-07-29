@@ -4,7 +4,7 @@ from rich.prompt import Confirm
 import smartmonitoring.const_settings as cs
 from pyfiglet import Figlet
 
-def print_logo(self) -> None:
+def print_logo() -> None:
     f = Figlet(font='standard', width=cs.CLI_WIDTH, justify='center')
     print(f.renderText(cs.CLI_LOGO_TEXT))
 
