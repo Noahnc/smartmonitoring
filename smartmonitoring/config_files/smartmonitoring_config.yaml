@@ -1,5 +1,5 @@
 SmartMonitoring_Proxy:
-  update_channel: TESTING # STABLE / TESTING
+  update_channel: STABLE # STABLE / TESTING
   debug_logging: true # Logs as debug if true
   log_file_size_mb: 50 #size of a single log file
   log_file_count: 3 #amount of log files for rotation

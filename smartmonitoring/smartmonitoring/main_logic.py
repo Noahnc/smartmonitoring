@@ -19,7 +19,6 @@ from smartmonitoring.handlers.data_handler import ConfigError, ManifestError, \
     ValueNotFoundInConfig, InstalledStackInvalid
 from smartmonitoring.handlers.data_handler import DataHandler
 from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable
-from smartmonitoring.helpers.cli_helper import cli_colors
 from smartmonitoring.models.local_config import LocalConfig
 from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig
 
@@ -346,19 +345,21 @@ class MainLogic:
         return grid
 
     def __print_container_status(self, disable_refresh: bool, containers: list[ContainerConfig] = None) -> None:
+        console = Console()
         if disable_refresh:
             runs = 1
         else:
             runs = 50
         if containers is None:
-            cli.print_information(
-                "Application is not deployed on this system, skipping container report.".center(cs.CLI_WIDTH))
+            console.print(
+                "[blue]Application is not deployed on this system, skipping container report.".center(cs.CLI_WIDTH))
             return
         try:
             dock = DockerHandler()
         except DockerInstanceUnavailable:
-            cli.print_error("Error connecting to local docker daemon".center(cs.CLI_WIDTH))
-            cli.print_error("Please make sure docker is running on this system".center(cs.CLI_WIDTH))
+            console = Console()
+            console.print("[red]Error connecting to local docker daemon".center(cs.CLI_WIDTH))
+            console.print("[red]Please make sure docker is running on this system".center(cs.CLI_WIDTH))
             return
         try:
             with Live(self.__generate_container_table(containers, dock, True), auto_refresh=False) as live:
@@ -368,3 +369,4 @@ class MainLogic:
             if not disable_refresh: print("Timeout reached, exiting...")
         except KeyboardInterrupt:
             print("Exit Status Dashboard".center(cs.CLI_WIDTH))
+
