@@ -28,7 +28,7 @@ def print_paragraph(text: str) -> None:
 
 
 def print_logo() -> None:
-    f = Figlet(font='standard', width=cs.CLI_WIDTH + 10, justify='center')
+    f = Figlet(font='standard', width=cs.CLI_WIDTH, justify='center')
     print(f.renderText(cs.CLI_LOGO_TEXT))
 
 

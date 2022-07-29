@@ -16,7 +16,7 @@ SmartMonitoring_Proxy:
       #ZBX_DEBUGEVEL: 3
 
   zabbix_agent_container:
-    smartmonitoring_status_file: "/Users/noahcanadea/Documents/GitHub/smartmonitoring/smartmonitoring/temp/smartmonitoring-update-status.json"
+    smartmonitoring_status_file: "/Users/noahcanadea/Documents/GitHub/smartmonitoring/smartmonitoring/temp/update-status.json"
 
   #zabbix_mysql_container:
     #local_settings:

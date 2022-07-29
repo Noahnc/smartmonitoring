@@ -15,7 +15,7 @@ setup(
         'docker',
         'packaging',
         'cerberus',
-        'prettytable',
+        'rich',
         'pyfiglet',
         'termcolor',
         'deepdiff',

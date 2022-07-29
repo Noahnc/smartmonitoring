@@ -120,12 +120,12 @@ class DataHandler:
         lg.debug("Processing local config from dict to object")
         valid, message = self.validate_local_config(local_config)
         if not valid:
-            lg.critical(f'Local config not valid: {message}')
+            lg.error(f'Local config not valid: {message}')
             raise ConfigError(f'Local config not valid: {message}')
         try:
             config = LocalConfig.from_dict(local_config)
         except Exception as e:
-            lg.critical("Error converting local config to object.")
+            lg.error("Error converting local config to object.")
             raise ConfigError(f'Error converting local config to object. Error message: {e})') from e
         else:
             lg.debug("Local config dict successfully processed to object")
@@ -204,7 +204,7 @@ class DataHandler:
             lg.debug(f'Config of container: {container.name} successfully retrieved')
             return container_local_config.to_dict()
         except AttributeError as e:
-            lg.info(f'No config for container: {container.name} in local config found')
+            lg.debug(f'No config for container: {container.name} in local config found')
             raise ValueNotFoundInConfig(f'Config for container {container.name} missing') from e
 
     def get_value_from_local_config(self, local_config: LocalConfig, container: ContainerConfig, key: str) -> str:
@@ -282,7 +282,7 @@ class DataHandler:
             manifest = self.process_update_manifest(stack["manifest"])
             return config, manifest
         except Exception as e:
-            lg.critical(f'Error processing installed stack from file: {self.stack_file}, message: {e}')
+            lg.error(f'Error processing installed stack from file: {self.stack_file}, message: {e}')
             raise InstalledStackInvalid(f'Error processing installed stack from file: {self.stack_file}, message: {e}')
 
     def save_status(self, status: str, upd_channel: str = None, pkg_version: str = None, error_msg: str = "-") -> None:
@@ -320,7 +320,7 @@ class DataHandler:
         self.__save_json_file(self.status_file, data)
 
     def get_status(self) -> dict:
-        lg.info(f'Getting status from file: {self.status_file}')
+        lg.debug(f'Getting status from file: {self.status_file}')
         try:
             status = self.__load_json_file(self.status_file)
             return status
@@ -339,7 +339,7 @@ class DataHandler:
             with open(file) as f:
                 data = json.load(f)
         except Exception as e:
-            lg.critical(f'Could not load json from file: {file}')
+            lg.error(f'Could not load json from file: {file}')
             raise
         return data
 

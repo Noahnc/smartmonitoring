@@ -3,6 +3,8 @@ import smartmonitoring.helpers.log_helpers as lh
 from smartmonitoring.main_logic import MainLogic
 import smartmonitoring.helpers.helper_functions as hf
 import click
+import smartmonitoring.const_settings as cs
+from rich.console import Console
 
 
 @click.group()
@@ -25,8 +27,12 @@ def restart(silent: bool, verbose: bool):
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
-        lg.debug(f'Stack trace: ', exc_info=True)
-        if not verbose: lg.info('Run the application with the --verbose flag to get more information.')
+        if verbose and not silent:
+            Console().print_exception(show_locals=True)
+        elif verbose and silent:
+            lg.debug(f'Stack trace: ', exc_info=True)
+        else:
+            lg.info('Run the application with the --verbose flag to get more information.')
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
@@ -37,16 +43,21 @@ def restart(silent: bool, verbose: bool):
 def validate_config(verbose: bool):
     """Validates the local config for errors in the syntax."""
     main_logic = MainLogic()
-    if verbose: lh.add_console_logger(debug=verbose)
+    if verbose:
+        lh.add_console_logger(debug=verbose)
+        lh.log_start("Validating config and manifest...")
     try:
         main_logic.check_configurations(verbose)
     except KeyboardInterrupt:
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
-        if not verbose: lg.info('Run the application with the --verbose flag to get more information.')
-        lg.debug(e, exc_info=True)
-    pass
+        if verbose:
+            Console().print_exception(show_locals=True)
+        else:
+            lg.info('Run the application with the --verbose flag to get more information.')
+    finally:
+        if verbose: lh.log_finish()
 
 
 @main.command()
@@ -64,8 +75,12 @@ def apply_config(verbose: bool, silent: bool):
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
-        lg.debug(f'Stack trace: ', exc_info=True)
-        if not verbose: lg.info('Run the application with the --verbose flag to get more information.')
+        if verbose and not silent:
+            Console().print_exception(show_locals=True)
+        elif verbose and silent:
+            lg.debug(f'Stack trace: ', exc_info=True)
+        else:
+            lg.info('Run the application with the --verbose flag to get more information.')
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
@@ -86,8 +101,12 @@ def deploy(silent: bool, verbose: bool):
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
-        lg.debug(f'Stack trace: ', exc_info=True)
-        if not verbose: lg.info('Run the application with the --verbose flag to get more information.')
+        if verbose and not silent:
+            Console().print_exception(show_locals=True)
+        elif verbose and silent:
+            lg.debug(f'Stack trace: ', exc_info=True)
+        else:
+            lg.info('Run the application with the --verbose flag to get more information.')
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
@@ -108,8 +127,12 @@ def undeploy(silent: bool, verbose: bool):
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
-        lg.debug(f'Stack trace: ', exc_info=True)
-        if not verbose: lg.info('Run the application with the --verbose flag to get more information.')
+        if verbose and not silent:
+            Console().print_exception(show_locals=True)
+        elif verbose and silent:
+            lg.debug(f'Stack trace: ', exc_info=True)
+        else:
+            lg.info('Run the application with the --verbose flag to get more information.')
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
@@ -132,8 +155,12 @@ def update(silent: bool, verbose: bool, force: bool):
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
-        lg.debug(f'Stack trace: ', exc_info=True)
-        if not verbose: lg.info('Run the application with the --debug flag to get more information.')
+        if verbose and not silent:
+            Console().print_exception(show_locals=True)
+        elif verbose and silent:
+            lg.debug(f'Stack trace: ', exc_info=True)
+        else:
+            lg.info('Run the application with the --verbose flag to get more information.')
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
@@ -141,19 +168,21 @@ def update(silent: bool, verbose: bool, force: bool):
 
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
-def status(verbose: bool):
+@click.option("--disable-refresh", is_flag=True, default=False, help="Disables automatic refresh of the Dashboard")
+def status(verbose: bool, disable_refresh: bool):
     """Prints status information of the currently installed application stack."""
     try:
         main_logic = MainLogic()
         lh.add_console_logger(debug=verbose, level="ERROR")
         lh.log_start("Read and print status of Application")
-        main_logic.print_status()
-    except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected. Exiting...")
+        if verbose: disable_refresh = True
+        main_logic.print_status(disable_refresh)
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
-        lg.debug(f'Stack trace: ', exc_info=True)
-        if not verbose: lg.info('Run the application with the --debug flag to get more information.')
+        if verbose:
+            Console().print_exception(show_locals=True)
+        else:
+            lg.info('Run the application with the --debug flag to get more information.')
         hf.exit_with_error(1)
     finally:
         lh.log_finish()

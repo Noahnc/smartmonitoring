@@ -1,32 +1,34 @@
-import os
+import random
+import time
 
-import const_settings as cs
-from handlers.data_handler import DataHandler
-from main_logic import MainLogic
-
-debug = False
-silent = False
-
-PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
-
-smartmonitoring_config_dir = os.path.join(PARENT_FOLDER, "config_files")
-smartmonitoring_log_dir = os.path.join(PARENT_FOLDER, "logs")
-smartmonitoring_var_dir = os.path.join(PARENT_FOLDER, "temp")
-
-config_file = os.path.join(smartmonitoring_config_dir, cs.LOCAL_CONF_FILE_NAME)
-stack_file = os.path.join(smartmonitoring_var_dir, cs.DEPLOYED_STACK_FILE_NAME)
-
-cfh = DataHandler(config_file, stack_file)
-
-cfh.get_configs()
+from rich.live import Live
+from rich.table import Table
 
 
+def generate_table() -> Table:
+    """Make a new table."""
+    table = Table()
+    table.add_column("ID")
+    table.add_column("Value")
+    table.add_column("Status")
+
+    for row in range(6):
+        value = random.random() * 100
+        table.add_row(
+            f"{row}", f"{value:3.2f}", "[red]ERROR" if value < 50 else "[green]SUCCESS"
+        )
+    return table
+
+
+with Live(generate_table(), refresh_per_second=4) as live:
+    for _ in range(40):
+        time.sleep(0.4)
+        live.update(generate_table())
 
 
 
 
 
-main = MainLogic()
 
 
 

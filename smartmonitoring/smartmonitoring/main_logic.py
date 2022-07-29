@@ -2,20 +2,23 @@ import logging as lg
 import os
 import socket
 import sys
-
-import prettytable
-from packaging import version
-
+import time
 from pathlib import Path
-from smartmonitoring import __version__
+
+from packaging import version
+from rich.console import Console
+from rich.live import Live
+from rich.table import Table
+
 import smartmonitoring.const_settings as cs
-import smartmonitoring.helpers.log_helpers as lh
 import smartmonitoring.helpers.cli_helper as cli
 import smartmonitoring.helpers.helper_functions as hf
-from smartmonitoring.handlers.data_handler import DataHandler
-from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable
+import smartmonitoring.helpers.log_helpers as lh
+from smartmonitoring import __version__
 from smartmonitoring.handlers.data_handler import ConfigError, ManifestError, \
     ValueNotFoundInConfig, InstalledStackInvalid
+from smartmonitoring.handlers.data_handler import DataHandler
+from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable
 from smartmonitoring.helpers.cli_helper import cli_colors
 from smartmonitoring.models.local_config import LocalConfig
 from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig
@@ -67,10 +70,8 @@ class MainLogic:
             return
 
     def check_configurations(self, debug: bool) -> None:
-        config_color = cli_colors.GREEN
         config_valid = True
         config_message = "Local Config is valid"
-        manifest_color = cli_colors.GREEN
         manifest_valid = True
         manifest_message = "Manifest is valid"
         try:
@@ -79,38 +80,41 @@ class MainLogic:
         except ConfigError as e:
             config_valid = False
             config_message = e
-            config_color = cli_colors.RED
-            manifest_color = None
             manifest_valid = "-"
             manifest_message = "Skipped because of error with local config file"
             if debug: raise e
         except ManifestError as e:
-            manifest_color = cli_colors.RED
             manifest_valid = False
             manifest_message = e
             if debug: raise e
         except ValueNotFoundInConfig as e:
             config_valid = False
             config_message = e
-            config_color = cli_colors.RED
-            manifest_color = cli_colors.RED
             manifest_valid = False
             manifest_message = e
             if debug: raise e
-        if not debug:
-            cli.print_logo()
-            cli.print_paragraph("Local Config File")
-            cli.print_centered_text("Valid", str(config_valid), config_color)
-            cli.print_centered_text("Message", config_message, config_color)
+        if debug: return
+        cli.print_logo()
+        table = Table(width=cs.CLI_WIDTH,
+                      title="Configuration and Manifest Validation")
+        table.add_column("Config File", justify="center", width=cs.CLI_WIDTH)
+        table.add_column("Update Manifest", justify="center", width=cs.CLI_WIDTH)
+        table.add_row("[blue]Valid", "[blue]Valid")
+        table.add_row(f'[green]{config_valid}' if config_valid else f'[red]{config_valid}',
+                      f'[green]{manifest_valid}' if manifest_valid else f'[red]{manifest_valid}')
+        table.add_row()
+        table.add_row("[blue]Message", "[blue]Message")
+        table.add_row(f'[green]{config_message}' if config_valid else f'[red]{config_message}',
+                      f'[green]{manifest_message}' if manifest_valid else f'[green]{manifest_message}')
+        table.add_row()
 
-            cli.print_paragraph("Update Manifest")
-            cli.print_centered_text("Valid", str(manifest_valid), manifest_color)
-            cli.print_centered_text("Message", manifest_message, manifest_color)
+        Console().print(table)
 
     def validate_and_apply_config(self, silent: bool) -> None:
         if not self.__check_if_deployed():
             lg.warning(
-                "SmartMonitoring is not deployed on this system. Before you can apply a new configuration, you have to deploy the application...")
+                "SmartMonitoring is not deployed on this system. Before you can apply a new configuration, "
+                "you have to deploy the application...")
             return
         if self.check_if_deployment_in_progress():
             lg.warning("Deployment is already in progress. Please wait until it is finished.")
@@ -135,19 +139,15 @@ class MainLogic:
         lg.info("Applying new local configuration...")
         self.__replace_deployment(current_config, new_config, manifest, manifest)
 
-    def print_status(self) -> None:
+    def print_status(self, disable_refresh) -> None:
         cli.print_logo()
-        self.__print_host_information()
-
         if self.__check_if_deployed():
             config, manifest = self.cfh.get_installed_stack()
-            status = self.cfh.get_status()
-            self.__print_deployment_status(manifest.package_version, status["status"], config.update_channel,
-                                           config.zabbix_proxy_container.proxy_name)
-            self.__print_container_status(manifest.containers)
+            self.__print_system_status(config, manifest)
+            self.__print_container_status(disable_refresh, manifest.containers)
         else:
-            self.__print_deployment_status("-", "Not Deployed", "-", "-")
-            self.__print_container_status()
+            self.__print_system_status()
+            self.__print_container_status(disable_refresh)
 
     def restart_application(self) -> None:
         if not self.__check_if_deployed():
@@ -211,7 +211,7 @@ class MainLogic:
             return
         if force or self.__check_version_is_newer(current_manifest.package_version, new_manifest.package_version):
             lg.info(
-                f"Updating SmartMonitoring from {current_manifest.package_version} to {new_manifest.package_version}...")
+                f"Update SmartMonitoring from {current_manifest.package_version} to {new_manifest.package_version}...")
             self.__replace_deployment(config, config, current_manifest, new_manifest)
             lg.info(f"SmartMonitoring successfully updated to version {new_manifest.package_version}...")
 
@@ -234,7 +234,8 @@ class MainLogic:
             self.cfh.save_status("UpdateError", error_msg=str(e))
         else:
             self.cfh.save_installed_stack(new_config, new_manifest)
-            self.cfh.save_status("Deployed", upd_channel=new_config.update_channel, pkg_version=new_manifest.package_version)
+            self.cfh.save_status("Deployed", upd_channel=new_config.update_channel,
+                                 pkg_version=new_manifest.package_version)
             dock.perform_cleanup()
             lg.info("New containers successfully deployed...")
 
@@ -243,7 +244,7 @@ class MainLogic:
         for container in manifest.containers:
             env_vars = self.cfh.compose_env_variables(config, container, env_secrets)
             lg.info(
-                f"Deploying container: {container.name} with image: {container.image} and hostname: {container.hostname}")
+                f"Deploying container: {container.name} with image: {container.image}")
 
             # Set local file path based on config file
             if container.files is not None:
@@ -292,23 +293,63 @@ class MainLogic:
             lg.debug("No deployment in progress...")
             return False
 
-    def __print_host_information(self):
-        cli.print_paragraph("Host Information")
-        cli.print_centered_text("Hostname", socket.gethostname())
-        cli.print_centered_text("Updater Version", __version__)
-        cli.print_centered_text("IP Address", socket.gethostbyname(socket.gethostname()))
-        cli.print_centered_text("Public iP", hf.get_public_ip_address())
+    def __print_system_status(self, config: LocalConfig = None, manifest: UpdateManifest = None) -> None:
+        if config is None or manifest is None:
+            status = "Not deployed"
+            version = "-"
+            channel = "-"
+            proxy_name = "-"
+        else:
+            status = self.cfh.get_status()["status"]
+            version = manifest.package_version
+            channel = config.update_channel
+            proxy_name = config.zabbix_proxy_container.proxy_name
+        table = Table(width=cs.CLI_WIDTH,
+                      title="System and Deployment Status",
+                      show_header=False)
+        table.add_column("Host Information", justify="center", width=cs.CLI_WIDTH)
+        table.add_column("Deployment Status", justify="center", width=cs.CLI_WIDTH)
+        table.add_row("[blue]Hostname", "[blue]Status")
+        table.add_row(socket.gethostname(), "[green]Deployed" if status == "Deployed" else "[red]Not deployed")
+        table.add_row()
+        table.add_row("[blue]Updater Version", "[blue]Version")
+        table.add_row(__version__, version)
+        table.add_row()
+        table.add_row("[blue]Local IP Address", "[blue]Update Channel")
+        table.add_row(socket.gethostbyname(socket.gethostname()), channel)
+        table.add_row()
+        table.add_row("[blue]Public IP Address", "[blue]Proxy Name")
+        table.add_row(hf.get_public_ip_address(), proxy_name)
 
-    def __print_deployment_status(self, version: str, status: str, channel: str, proxy_name: str) -> None:
-        cli.print_paragraph("Deployment Status")
-        cli.print_centered_text("Status", status)
-        cli.print_centered_text("Version", version)
-        cli.print_centered_text("Channel", channel)
-        cli.print_centered_text("Proxy Name", proxy_name)
+        Console().print(table)
 
+    def __generate_container_table(self, containers: list[ContainerConfig], dock: DockerHandler,
+                                   initializing: bool) -> Table:
+        grid = Table.grid()
+        table = Table(width=cs.CLI_WIDTH, title="Container Statistics")
+        grid.add_column()
+        grid.add_row(table)
+        if initializing:
+            table.add_column("Loading containers...", justify="center")
+            return table
+        table.add_column("Name", justify="center")
+        table.add_column("Status", justify="center")
+        table.add_column("Image", justify="center")
+        table.add_column("Memory Usage", justify="center")
+        table.add_column("CPU Usage", justify="center")
+        for container_config in containers:
+            container = dock.get_container(container_config.name)
+            stats = dock.get_container_stats(container)
+            table.add_row(f'{container_config.name}', f'{container.status}', f'{container.image}',
+                          f'{stats["mem_usg_mb"]}', f'{stats["cpu_usg_present"]}')
+        grid.add_row("Press Ctrl+C to exit")
+        return grid
 
-    def __print_container_status(self, containers: list[ContainerConfig] = None) -> None:
-        cli.print_paragraph("Container Statistics")
+    def __print_container_status(self, disable_refresh: bool, containers: list[ContainerConfig] = None) -> None:
+        if disable_refresh:
+            runs = 1
+        else:
+            runs = 50
         if containers is None:
             cli.print_information(
                 "Application is not deployed on this system, skipping container report.".center(cs.CLI_WIDTH))
@@ -319,12 +360,11 @@ class MainLogic:
             cli.print_error("Error connecting to local docker daemon".center(cs.CLI_WIDTH))
             cli.print_error("Please make sure docker is running on this system".center(cs.CLI_WIDTH))
             return
-        cont_stat = prettytable.PrettyTable()
-        cont_stat.field_names = ["Name", "Status", "Image", "Memory Usage", "CPU Usage"]
-        for container_config in containers:
-            container = dock.get_container(container_config.name)
-            stats = dock.get_container_stats(container)
-            cont_stat.add_row(
-                [container.name, str(container.status), str(container.image), str(stats["mem_usg_mb"]) + " MB",
-                 str(stats["cpu_usg_present"]) + " %"])
-        print(cont_stat)
+        try:
+            with Live(self.__generate_container_table(containers, dock, True), auto_refresh=False) as live:
+                for run in range(runs):
+                    live.update(self.__generate_container_table(containers, dock, False), refresh=True)
+                    time.sleep(0.5)
+            if not disable_refresh: print("Timeout reached, exiting...")
+        except KeyboardInterrupt:
+            print("Exit Status Dashboard".center(cs.CLI_WIDTH))
