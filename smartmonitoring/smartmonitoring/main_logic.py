@@ -65,6 +65,7 @@ class MainLogic:
                 lh.update_file_logger(level="DEBUG", size=config.log_file_size_mb, count=config.log_file_count)
             else:
                 lh.update_file_logger(size=config.log_file_size_mb, count=config.log_file_count)
+        else:
             lh.update_file_logger(level="DEBUG")
             return
 
