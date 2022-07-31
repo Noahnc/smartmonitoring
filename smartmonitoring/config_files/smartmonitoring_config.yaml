@@ -1,13 +1,12 @@
 SmartMonitoring_Proxy:
   update_channel: STABLE # STABLE / TESTING
   debug_logging: true # Logs as debug if true
-  log_file_size_mb: 50 #size of a single log file
+  log_file_size_mb: 55 #size of a single log file
   log_file_count: 3 #amount of log files for rotation
   update_manifest_url: https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml
 
   zabbix_proxy_container:
     proxy_name: MusterAG-Proxy-Zuerich
-    zabbix_server_psk: dh874zhuihfuidhzfuidhfuidshfuierzhfiuewaurf98eizhtguirezr87zhuerihfiurehzuz
     psk_key_file: /Users/noahcanadea/Dev/zabbix_enc_key.psk
 
     # Bei Local settings können lokale einstellungen für den Container übersteuert werden.

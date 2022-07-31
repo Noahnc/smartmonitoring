@@ -71,7 +71,6 @@ class ZabbixAgentContainer:
 @dataclass
 class ZabbixProxyContainer:
     proxy_name: str
-    zabbix_server_psk: str
     psk_key_file: str
     local_settings: Optional[Dict] = None
 
@@ -79,16 +78,14 @@ class ZabbixProxyContainer:
     def from_dict(obj: Any) -> 'ZabbixProxyContainer':
         assert isinstance(obj, dict)
         proxy_name = from_str(obj.get("proxy_name"))
-        zabbix_server_psk = from_str(obj.get("zabbix_server_psk"))
         psk_key_file = from_str(obj.get("psk_key_file"))
         local_settings = obj.get("local_settings")
-        return ZabbixProxyContainer(proxy_name, zabbix_server_psk, psk_key_file, local_settings)
+        return ZabbixProxyContainer(proxy_name, psk_key_file, local_settings)
 
     # noinspection PyDictCreation
     def to_dict(self) -> dict:
         result: dict = {}
         result["proxy_name"] = from_str(self.proxy_name)
-        result["zabbix_server_psk"] = from_str(self.zabbix_server_psk)
         result["psk_key_file"] = from_str(self.psk_key_file)
         result["local_settings"] = self.local_settings
         return result

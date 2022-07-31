@@ -18,7 +18,7 @@ from smartmonitoring import __version__
 from smartmonitoring.handlers.data_handler import ConfigError, ManifestError, \
     ValueNotFoundInConfig, InstalledStackInvalid
 from smartmonitoring.handlers.data_handler import DataHandler
-from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable
+from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable, ContainerCreateError, ImageNotFound
 from smartmonitoring.models.local_config import LocalConfig
 from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig
 
@@ -75,7 +75,7 @@ class MainLogic:
         manifest_valid = True
         manifest_message = "Manifest is valid"
         try:
-            self.cfh.get_configs()
+            self.cfh.get_config_and_manifest()
             lg.info("Configuration and manifest are valid!")
         except ConfigError as e:
             config_valid = False
@@ -169,9 +169,10 @@ class MainLogic:
             return
         lg.info("Deploying smartmonitoring application to this system...")
         lg.info("Retrieving local configuration and update manifest...")
-        config, manifest = self.cfh.get_configs()
+        config, manifest = self.cfh.get_config_and_manifest()
         dock = DockerHandler()
         self.cfh.save_status("Deploying")
+        self.cfh.validate_config_against_manifest(config, manifest)
         dock.create_inter_network()
         self.__install_application(config, manifest, dock)
         self.cfh.save_installed_stack(config, manifest)
@@ -219,12 +220,14 @@ class MainLogic:
                              current_manifest: UpdateManifest, new_manifest: UpdateManifest) -> None:
         dock = DockerHandler()
         self.cfh.validate_config_against_manifest(new_config, new_manifest)
-        lg.info("Removing old containers...")
-        self.__uninstall_application(current_manifest, dock)
         try:
+            dock.check_if_images_exist(new_manifest.containers)
+            lg.info("Removing old containers...")
+            self.cfh.save_status("Deploying")
+            self.__uninstall_application(current_manifest, dock)
             lg.info("Creating new containers...")
             self.__install_application(new_config, new_manifest, dock)
-        except Exception as e:
+        except ContainerCreateError as e:
             lg.error(f"Error while deploying new containers: {e}")
             lg.info("Performing fallback to previous version...")
             lg.debug("Removing possibly created new containers...")
@@ -232,10 +235,14 @@ class MainLogic:
             lg.info("Creating old containers...")
             self.__install_application(current_config, current_manifest, dock)
             self.cfh.save_status("UpdateError", error_msg=str(e))
+            lg.info("Performing cleanup...")
+            dock.perform_cleanup()
+            lg.info("Old containers successfully created...")
         else:
             self.cfh.save_installed_stack(new_config, new_manifest)
             self.cfh.save_status("Deployed", upd_channel=new_config.update_channel,
                                  pkg_version=new_manifest.package_version)
+            lg.info("Performing cleanup...")
             dock.perform_cleanup()
             lg.info("New containers successfully deployed...")
 
@@ -243,8 +250,7 @@ class MainLogic:
         env_secrets = self.cfh.generate_dynamic_secrets(manifest.dynamic_secrets)
         for container in manifest.containers:
             env_vars = self.cfh.compose_env_variables(config, container, env_secrets)
-            lg.info(
-                f"Deploying container: {container.name} with image: {container.image}")
+            lg.info(f"Deploying container: {container.name} with image: {container.image}")
 
             # Set local file path based on config file
             if container.files is not None:
@@ -331,6 +337,7 @@ class MainLogic:
         grid.add_row(table)
         if initializing:
             table.add_column("Loading containers...", justify="center")
+            table.box = None
             return table
         table.add_column("Name", justify="center")
         table.add_column("Status", justify="center")

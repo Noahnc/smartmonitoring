@@ -21,7 +21,7 @@ class ContainerCreateError(Exception):
     pass
 
 
-class ImageDoesNotExist(Exception):
+class ImageNotFound(Exception):
     pass
 
 
@@ -84,8 +84,8 @@ class DockerHandler:
 
     def stop_container(self, container_name: str):
         try:
-            lg.info(f'Stopping container {container_name}')
             container = self.get_container(container_name)
+            lg.info(f'Stopping container {container_name}')
             container.stop()
             lg.debug(f'Container {container_name} stopped')
         except NotFound:
@@ -173,6 +173,17 @@ class DockerHandler:
             lg.debug(f'Image {image_name} does not exist in local docker instance')
             return False
 
+    def check_if_images_exist(self, containrers: list[ContainerConfig]) -> None:
+        exist = True
+        not_found_images = []
+        for container in containrers:
+            if not self.__check_if_image_exists(container.image):
+                exist = False
+                not_found_images.append(container.image)
+                lg.warning(f'Image {container.image} not found on Dockerhub')
+        if not exist:
+            raise ImageNotFound(f'The following Images where not found on Dockerhub {not_found_images}')
+
     def __pull_image_if_not_exists(self, image: str) -> None:
         if not self.__check_if_image_exists(image):
             try:
@@ -181,7 +192,7 @@ class DockerHandler:
                 lg.debug(f'Image {image} pulled from docker hub')
             except APIError as e:
                 lg.error(f'Error pulling image {image}')
-                raise ImageDoesNotExist(e)
+                raise ImageNotFound(e)
         else:
             lg.debug(f'Image {image} already exists, skip pulling')
 
@@ -226,7 +237,7 @@ class DockerHandler:
                 privileged=container.privileged,
                 detach=True)
             self.__connect_container_to_inter_network(container)
-        except APIError or ImageDoesNotExist as e:
+        except APIError or ImageNotFound as e:
             lg.error(f'Error creating container {container.name}')
             raise ContainerCreateError(e) from e
 

@@ -145,10 +145,6 @@ class ValidationSchemas:
                             'required': True,
                             'type': 'string'
                         },
-                        'zabbix_server_psk': {
-                            'required': True,
-                            'type': 'string'
-                        },
                         'psk_key_file': {
                             'required': True,
                             'type': 'string'

@@ -104,8 +104,7 @@ class DataHandler:
         except Exception as e:
             lg.error(f'Error phrasing update manifest from dict to object: {e}')
             raise ManifestError(f'Error phrasing update manifest from dict to object: {e}') from e
-        else:
-            lg.debug('Update manifest dict successfully processed to object')
+        lg.debug('Update manifest dict successfully processed to object')
         return manifest
 
     def validate_config_against_manifest(self, config: LocalConfig, manifest: UpdateManifest) -> None:
@@ -113,7 +112,7 @@ class DataHandler:
         env_secrets = self.generate_dynamic_secrets(manifest.dynamic_secrets)
         for container in manifest.containers:
             self.compose_env_variables(config, container, env_secrets)
-            if container.config.dynamic is not None:
+            if container.files is not None:
                 self.compose_mapped_files(container, config)
 
     def process_local_config(self, local_config: dict) -> LocalConfig:
@@ -127,8 +126,7 @@ class DataHandler:
         except Exception as e:
             lg.error("Error converting local config to object.")
             raise ConfigError(f'Error converting local config to object. Error message: {e})') from e
-        else:
-            lg.debug("Local config dict successfully processed to object")
+        lg.debug("Local config dict successfully processed to object")
         return config
 
     # Generates dict of environment variables for a container
@@ -161,13 +159,14 @@ class DataHandler:
     def __compose_env_variables_dynamic(self, container_local_config: dict, container: ContainerConfig) -> dict:
         env_variables = {}
         # Pull value for each dynamic setting of the container from the local config
-        if container.config.dynamic is not None:
-            for key, value in container.config.dynamic.items():
-                if value not in container_local_config:
-                    raise ValueNotFoundInConfig(
-                        f'Dynamic setting {value} not found in local config for container: {container.name}')
-                val = container_local_config[value]
-                env_variables[key] = val
+        if container.config.dynamic is  None:
+            return env_variables
+        for key, value in container.config.dynamic.items():
+            if value not in container_local_config:
+                raise ValueNotFoundInConfig(
+                    f'Dynamic setting {value} not found in local config for container: {container.name}')
+            val = container_local_config[value]
+            env_variables[key] = val
         return env_variables
 
     def __compose_env_variables_secrets(self, container: ContainerConfig, cont_secrets: dict) -> dict:
@@ -207,7 +206,7 @@ class DataHandler:
             lg.debug(f'No config for container: {container.name} in local config found')
             raise ValueNotFoundInConfig(f'Config for container {container.name} missing') from e
 
-    def get_value_from_local_config(self, local_config: LocalConfig, container: ContainerConfig, key: str) -> str:
+    def __get_local_setting_of_container(self, local_config: LocalConfig, container: ContainerConfig, key: str) -> str:
         try:
             lg.debug(f'Getting config of container: {container.name}')
             container_local_config = getattr(local_config, container.name).to_dict()
@@ -228,7 +227,7 @@ class DataHandler:
     def __validate_dict(self, config: dict, schema: dict) -> tuple[bool, str]:
         v = Validator(schema)
         if v.validate(config):
-            lg.debug("Config successfully validated with schema: " + str(schema))
+            lg.debug("Dict successfully validated with schema: " + str(schema))
             return (True, "Config is Valid")
         else:
             lg.warning("Dict validation error: " + str(v.errors))
@@ -242,10 +241,9 @@ class DataHandler:
         assert isinstance(config, dict)
         return self.__validate_dict(config, ValidationSchemas.LOCAL_CONFIG)
 
-    def get_configs(self) -> tuple[LocalConfig, UpdateManifest]:
+    def get_config_and_manifest(self) -> tuple[LocalConfig, UpdateManifest]:
         config = self.get_local_config()
         manifest = self.get_update_manifest(config)
-        self.validate_config_against_manifest(config, manifest)
         return config, manifest
 
     def save_installed_stack(self, config: LocalConfig, manifest: UpdateManifest) -> None:
@@ -268,7 +266,7 @@ class DataHandler:
                     raise ManifestError(f'Host path {file.host_path} does not exist on this system')
                 container_files.append(file)
             else:
-                host_path = self.get_value_from_local_config(config, container, file.host_path)
+                host_path = self.__get_local_setting_of_container(config, container, file.host_path)
                 if not os.path.exists(host_path):
                     raise ConfigError(f'File {file.name} does not exist on this system')
                 container_files.append(MappedFile(file.name, host_path, file.host_path_dynamic, file.container_path))
@@ -282,7 +280,6 @@ class DataHandler:
             manifest = self.process_update_manifest(stack["manifest"])
             return config, manifest
         except Exception as e:
-            lg.error(f'Error processing installed stack from file: {self.stack_file}, message: {e}')
             raise InstalledStackInvalid(f'Error processing installed stack from file: {self.stack_file}, message: {e}')
 
     def save_status(self, status: str, upd_channel: str = None, pkg_version: str = None, error_msg: str = "-") -> None:
@@ -292,14 +289,17 @@ class DataHandler:
         if not self.status_file.exists():
             if pkg_version is None: pkg_version = "-"
             if upd_channel is None: upd_channel = "-"
-            if status == "Deployed": last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            if status == "Deployed":
+                last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                last_update = "-"
             data = {
                 "status": status,
                 "error_msg": error_msg,
                 "smartmonitoring_version": __version__,
                 "update_channel": upd_channel,
                 "package_version": pkg_version,
-                "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "last_update": last_update
             }
         else:
             data = self.get_status()
@@ -338,7 +338,7 @@ class DataHandler:
         try:
             with open(file) as f:
                 data = json.load(f)
-        except Exception as e:
+        except Exception:
             lg.error(f'Could not load json from file: {file}')
             raise
         return data
@@ -350,15 +350,6 @@ class DataHandler:
         if os.path.exists(self.status_file):
             lg.debug(f'Removing status file: {self.status_file}')
             os.remove(self.status_file)
-
-    def check_if_stack_file_exists(self) -> bool:
-        lg.debug(f'Checking if stack is installed from file: {self.stack_file}')
-        if os.path.exists(self.stack_file):
-            lg.debug(f'Stack is installed: {self.stack_file}')
-            return True
-        else:
-            lg.debug(f'Stack file does not exist: {self.stack_file}')
-            return False
 
     def generate_dynamic_secrets(self, secret_names: list[str]) -> dict:
         dock_secrets = {}
