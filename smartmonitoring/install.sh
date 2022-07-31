@@ -12,6 +12,7 @@
 # Global variables
 PythonVersion="Python3.9"
 Script_setup_directory="$(dirname -- "$0")"
+varPSKidentity="PSK_KEY"
 Script_src_directory="$(dirname "$Script_setup_directory")"
 ScriptFolderPath="$(dirname "$Script_src_directory")"
 ProjectFolderName="SmartMonitoring_Proxy"                                                                                
@@ -23,6 +24,7 @@ varManifestUrl=$1
 varSmartMonitoringConfFolder="/etc/smartmonitoring"
 varSmartMonitoringvarFolder="/var/smartmonitoring"
 varSmartMonitoringLogFolder="/var/log/smartmonitoring"
+varIntallerLogFile="$varSmartMonitoringLogFolder/install.log"
 varSmartMonitoringConfigFilePath="$varSmartMonitoringConfFolder/smartmonitoring_config.yaml"
 varZabbixPSKFilePath="$varSmartMonitoringConfFolder/psk_key.txt"
 
@@ -31,28 +33,37 @@ trap ctrl_c INT
 
 function ctrl_c() {
     echo ""
-    echo -e "\e[31mAusführung des Script wurde abgebrochen.\e[39m"
-
-    if [[ $ScriptFolderPath = *"$ProjectFolderName" ]]; then
-        rm -r "$ScriptFolderPath"
-    fi
-    exit 1
+    echo -e "\e[31mInstall manually terminated.\e[39m"
+    exit 2
 }
 
-function OK() {
-    echo -e "\e[32m$1\e[39m"
-}
 
 function error() {
     echo -e "\e[31m
-Fehler beim ausführen des Scripts, folgender Vorgang ist fehlgeschlagen:
-$1
-Bitte prüfe den Log-Output.\e[39m"
-    if [[ $ScriptFolderPath = *"$ProjectFolderName" ]]; then
-        rm -r "$ScriptFolderPath"
-    fi
+A critical error occured during installation of SmartMonitoring.
+Please check the following log file for more information:\e[39m
+$varIntallerLogFile"
     exit 1
 }
+
+function clearLastLine() {
+    tput cuu 1 && tput el
+}
+
+function confirm_task_ok(){
+    clearLastLine
+    echo -e "\e[32m[ OK ]\e[39m $1" 
+}
+
+function task_error(){
+    clearLastLine
+    echo -e "\e[31m[ ERROR ]\e[39m $1"
+}
+
+function start_task(){
+    echo "[ RUNNING ] $1"
+}
+
 
 function CreateLoginBanner() {
 
@@ -74,26 +85,74 @@ function CreateLoginBanner() {
 smartmonitoring status --disable-refresh        
 EOF
 
-    # Neu erstellte Banner ausführbar machen
-    chmod a+x /etc/update-motd.d/* || error "Fehler beim einrichten des Login Banners"
-
-    OK "Login Banner wurde erfolgreich erstellt"
+    
+    chmod a+x /etc/update-motd.d/*
 }
 
 function CreateFolder() {
     if [[ ! -d "$1" ]]; then
-        mkdir -p "$1" || error "Fehler beim erstellen des Ordners $1"
-        OK "Ordner $1 wurde erstellt"
+        mkdir -p "$1"
     fi
 }
 
 function InstallProgramm() {
 if ! [ -x "$(command -v $1)" ]; then
-    apt-get install $1 -y || error "Fehler beim installieren von $1"
-    OK "$1 erfolgreich installiert"
-else
-    OK "$1 ist auf diesem System bereits installiert"
+    apt-get install $1 -y
 fi
+}
+
+function PerformOperation() {
+    comand=$1
+    name=$2
+    start_task "$name"
+    $comand &>> $varIntallerLogFile || error "$name"
+    confirm_task_ok "$name"
+}
+
+function CreateFolders() {
+    CreateFolder "$varSmartMonitoringLogFolder"
+    CreateFolder "$varSmartMonitoringConfFolder"
+    CreateFolder "$varSmartMonitoringvarFolder"
+}
+
+function SavePSKKey() {
+    echo "$varPSKKey" > "$varZabbixPSKFilePath"
+}
+
+function SaveSmartMonitoringConfig(){
+    cat >$varSmartMonitoringConfigFilePath <<EOF
+SmartMonitoring_Proxy:
+  #update_channel: STABLE # STABLE / TESTING
+  #debug_logging: true # Logs as debug if true
+  #log_file_size_mb: 50 #size of a single log file
+  #log_file_count: 3 #amount of log files for rotation
+  update_manifest_url: $1
+
+  zabbix_proxy_container:
+    proxy_name: $2
+    psk_key_file: /Users/noahcanadea/Dev/zabbix_enc_key.psk
+
+    # Bei Local settings können lokale einstellungen für den Container übersteuert werden.
+    # Ist die gleiche Variable auch im manifest definiert, hat diese hier immer vorrang.
+    #local_settings:
+      #ZBX_DEBUGEVEL: 3
+
+  zabbix_agent_container:
+    smartmonitoring_status_file: "/var/smartmonitoring/update-status.json"
+
+    #local_settings:
+
+  #zabbix_mysql_container:
+    #local_settings:
+EOF
+}
+
+function CreateCronJob() {
+    cat >/etc/cron.hourly/smartmonitoring <<EOF
+#!/bin/bash
+/usr/local/bin/smartmonitoring update -s
+EOF
+    chmod +x /etc/cron.hourly/smartmonitoring
 }
 
 
@@ -152,15 +211,14 @@ done
 
 varProxyName="$varCustomerName-Proxy-$varLocation"
 
-timedatectl set-timezone Europe/Zurich
+##################################### Start install tasks #####################################################
+CreateFolders
+PerformOperation "timedatectl set-timezone Europe/Zurich" "Set Timezone to Europe/Zurich"
+PerformOperation "apt-get update" "Update apt repositories"
 
-CreateFolder "$varSmartMonitoringConfFolder"
-CreateFolder "$varSmartMonitoringvarFolder"
-CreateFolder "$varSmartMonitoringLogFolder"
+PerformOperation "InstallProgramm docker.io" "Install Docker Engine"
+PerformOperation "InstallProgramm $PythonVersion" "Install $PythonVersion"
 
-
-InstallProgramm "docker.io"
-InstallProgramm "$PythonVersion"
 
 # OK "SmartMonitoring wird deployed... "
 # smartmonitoring deploy -s
@@ -169,46 +227,11 @@ InstallProgramm "$PythonVersion"
 # fi
 # OK "SmartMonitoring wurde erfolgreich deployed"
 
+PerformOperation "SavePSKKey" "Save Generated Zabbix PSK Key"
 
-cat >$varZabbixPSKFilePath <<EOF
-$varPSKKey
-EOF
-OK "PSK Key für Zabbix Proxy gespeichert"
-
-cat >$varSmartMonitoringConfigFilePath <<EOF
-SmartMonitoring_Proxy:
-  #update_channel: STABLE # STABLE / TESTING
-  #debug_logging: true # Logs as debug if true
-  #log_file_size_mb: 50 #size of a single log file
-  #log_file_count: 3 #amount of log files for rotation
-  update_manifest_url: $varManifestUrl
-
-  zabbix_proxy_container:
-    proxy_name: $varProxyName
-    psk_key_file: /Users/noahcanadea/Dev/zabbix_enc_key.psk
-
-    # Bei Local settings können lokale einstellungen für den Container übersteuert werden.
-    # Ist die gleiche Variable auch im manifest definiert, hat diese hier immer vorrang.
-    #local_settings:
-      #ZBX_DEBUGEVEL: 3
-
-  zabbix_agent_container:
-    smartmonitoring_status_file: "/Users/noahcanadea/Documents/GitHub/smartmonitoring/smartmonitoring/temp/update-status.json"
-
-    #local_settings:
-
-  #zabbix_mysql_container:
-    #local_settings:
-EOF
-
-cat >/etc/cron.hourly/smartmonitoring <<EOF
-#!/bin/bash
-/usr/local/bin/smartmonitoring update -s
-EOF
-chmod +x /etc/cron.hourly/smartmonitoring
-OK "Cron job erstellt"
-
-CreateLoginBanner || error "Fehler beim erstellen des Login Banners"
+PerformOperation "SaveSmartMonitoringConfig $varUpdateManifestUrl $varProxyName" "Save SmartMonitoring Config"
+PerformOperation "CreateCronJob" "Create Cron Job for auto update"
+PerformOperation "CreateLoginBanner" "Create Login Banner"
 
 echo -e " \e[34m
              _____     _     _     _         _              _     _         
@@ -223,7 +246,6 @@ Dein SmartMonitoring Proxy wurde erfolgreich Installiert!
 Erstelle nun mit folgenden Angaben den Proxy im Zabbix WebPortal.
 
 Proxy Name:\e[33m $varProxyName\e[34m
-Public iP:\e[33m $varMyPublicIP\e[34m
 PSK Identity:\e[33m $varPSKidentity\e[34m
 512bit PSK Key:\e[33m
 $varPSKKey\e[34m
