@@ -8,22 +8,14 @@
 #
 #                    Version 1.0 | 21.07.2022
 
+# Global config variables
+varPythonVersion="Python3.9"
+varSmartMonitoringDownloadURL="https://github.com/Noahnc/smartmonitoring/releases/download/alpha/smartmonitoring-0.5.0.tar.gz"
+varSmartMonitoringManifestURL="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
 
-# Global variables
-PythonVersion="Python3.9"
-SmartMonitoringDownloadURL="https://github.com/Noahnc/smartmonitoring/releases/download/alpha/smartmonitoring-0.5.0.tar.gz"
-SmartMonitoringFileName="smartmonitoring.tar.gz"
-SmartMonitoringManifestURL="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
-Script_setup_directory="$(dirname -- "$0")"
 varPSKidentity="PSK_KEY"
-Script_src_directory="$(dirname "$Script_setup_directory")"
-ScriptFolderPath="$(dirname "$Script_src_directory")"
-ProjectFolderName="SmartMonitoring_Proxy"                                                                                
-varSmartMonitorFolder="SmartMonitor"
+varSmartMonitoringFileName="smartmonitoring.tar.gz"
 varPSKKey=$(openssl rand -hex 512)
-varContentValid=
-varProxyName=
-varManifestUrl=$1
 varSmartMonitoringConfFolder="/etc/smartmonitoring"
 varSmartMonitoringvarFolder="/var/smartmonitoring"
 varSmartMonitoringLogFolder="/var/log/smartmonitoring"
@@ -31,7 +23,7 @@ varIntallerLogFile="$varSmartMonitoringLogFolder/install.log"
 varSmartMonitoringConfigFilePath="$varSmartMonitoringConfFolder/smartmonitoring_config.yaml"
 varZabbixPSKFilePath="$varSmartMonitoringConfFolder/psk_key.txt"
 
-# Auffangen des Shell Terminator
+# Catch shell termination
 trap ctrl_c INT
 
 function ctrl_c() {
@@ -40,64 +32,39 @@ function ctrl_c() {
     exit 2
 }
 
-
 function error() {
-    DeleteFile "$SmartMonitoringFileName"
+    DeleteFile "$varSmartMonitoringFileName"
     echo -e "\e[31m
 A critical error occured during installation of SmartMonitoring.
 Please check the following log file for more information:\e[39m
-$varIntallerLogFile"
+Logfile: $varIntallerLogFile"
     exit 1
 }
 
 function DeleteFile() {
     if [ -f "$1" ]; then
-        rm "$1"
+        echo "Deleting file: $1"
+        rm -f "$1"
     fi
 }
 
-function clearLastLine() {
+function ClearLastLine() {
     tput cuu 1 && tput el
 }
 
-function confirm_task_ok(){
-    clearLastLine
-    echo -e "\e[32m[ OK ]\e[39m $1" 
+function confirm_task_ok() {
+    ClearLastLine
+    echo -e "\e[32m[ OK ]\e[39m $1"
 }
 
-function task_error(){
-    clearLastLine
+function task_error() {
+    ClearLastLine
     echo -e "\e[31m[ ERROR ]\e[39m $1"
     error "$1"
 }
 
-function start_task(){
+function start_task() {
     echo "[ RUNNING ] $1"
-}
-
-
-function CreateLoginBanner() {
-
-    if [[ -f /etc/motd ]]; then
-        rm -f /etc/motd
-    fi
-
-    if [[ -f /etc/update-motd.d/10-uname ]]; then
-        rm /etc/update-motd.d/10-uname
-    fi
-
-    if [[ -f /etc/update-motd.d/50-landscape-sysinfo ]]; then
-        rm /etc/update-motd.d/50-landscape-sysinfo
-    fi
-
-    # Erstelle das Logo
-    cat >/etc/update-motd.d/00-smartmonitoring <<EOF
-#!/bin/bash
-smartmonitoring status --disable-refresh        
-EOF
-
-    
-    chmod a+x /etc/update-motd.d/*
 }
 
 function CreateFolder() {
@@ -107,30 +74,49 @@ function CreateFolder() {
 }
 
 function InstallProgramm() {
-if ! [ -x "$(command -v $1)" ]; then
-    apt-get install $1 -y
-fi
+    if ! [ -x "$(command -v $1)" ]; then
+        apt-get install $1 -y
+    fi
 }
 
 function PerformOperation() {
     comand=$1
     name=$2
     start_task "$name"
-    $comand &>> $varIntallerLogFile || task_error "$name"
+    $comand &>>$varIntallerLogFile || task_error "$name"
     confirm_task_ok "$name"
 }
 
+function CreateLoginBanner() {
+
+    # Delete not needed motd files
+    DeleteFile "/etc/motd"
+    DeleteFile "/etc/update-motd.d/10-uname"
+    DeleteFile "/etc/update-motd.d/20-hints"
+    DeleteFile "/etc/update-motd.d/50-banner"
+    DeleteFile "/etc/update-motd.d/50-landscape-sysinfo"
+    DeleteFile "/etc/update-motd.d/50-motd-news"
+    DeleteFile "/etc/update-motd.d/88-esm-announce"
+
+    # Create new motd file
+    cat >/etc/update-motd.d/00-smartmonitoring <<EOF
+#!/bin/bash
+smartmonitoring status --disable-refresh        
+EOF
+    # Make the file executable
+    chmod a+x /etc/update-motd.d/*
+}
+
 function CreateFolders() {
+    # Create SmartMonitoring foders
     CreateFolder "$varSmartMonitoringLogFolder"
     CreateFolder "$varSmartMonitoringConfFolder"
     CreateFolder "$varSmartMonitoringvarFolder"
 }
 
-function SavePSKKey() {
-    echo "$varPSKKey" > "$varZabbixPSKFilePath"
-}
 
-function SaveSmartMonitoringConfig(){
+function SaveSmartMonitoringFiles() {
+    # Save config file
     cat >$varSmartMonitoringConfigFilePath <<EOF
 SmartMonitoring_Proxy:
   update_channel: STABLE # STABLE / TESTING
@@ -156,25 +142,12 @@ SmartMonitoring_Proxy:
   #zabbix_mysql_container:
     #local_settings:
 EOF
+# Save Zabbix PSK key
+echo "$varPSKKey" >"$varZabbixPSKFilePath"
 }
 
-function CreateCronJob() {
-    cat >/etc/cron.hourly/smartmonitoring <<EOF
-#!/bin/bash
-/usr/local/bin/smartmonitoring update -s
-EOF
-    chmod +x /etc/cron.hourly/smartmonitoring
-}
-
-function InstallSmartMonitoring() {
-    wget $SmartMonitoringDownloadURL -O $SmartMonitoringFileName
-    pip install $SmartMonitoringFileName
-}
-
-
-########################################## Script entry point ################################################
-
-echo -e " \e[34m
+function PrintLogo() {
+    echo -e " \e[34m
              _____     _     _     _         _              _     _         
             |__  /__ _| |__ | |__ (_)_  __  | |__  _   _   | |__ | |_ ___   
               / // _  | '_ \| '_ \| \ \/ /  | '_ \| | | |  | '_ \| __/ __|  
@@ -182,77 +155,14 @@ echo -e " \e[34m
             /____\__,_|_.__/|_.__/|_/_/\_\  |_.__/ \__, |  |_.__/ \__\___(_)
                                                    |___/
 ____________________________________________________________________________________________
-
-Dies ist das Setup Script für btc SmartCollab Proxys.
-Stelle sicher, dass folgende Bedingungen erfüllt sind:
-- NTP Traffic ins Internet ist geöffnet.
-- Port TCP 10051 ins Internet ist geöffnet.
-- Port TCP/UDP 443 ins Internet ist geöffnet.
-
-Du kannst die Ausführung dieses Scripts jederzeit mit Ctrl+C beenden.
 
 \e[39m
 "
+}
 
-# Prüfe ob das Script auf einem Ubuntu System ausgeführt wurde.
-if ! [[ -f /etc/lsb-release ]]; then
-    error "btc Zabbix Proxys dürfen nur auf Ubuntu Server installiert werden. Dieses System ist jedoch nicht kompatibel."
-fi
-
-# Aufnehmen des Kundennames
-varLocation=
-varCustomerName=
-varContentValid="false"
-while [[ $varContentValid = "false" ]]; do
-    echo "Bitte den Namen des Kunden eingeben. Bspw. MusterAG (Erlaubte Zeichen: a-z A-Z 0-9 _ )"
-    read -r -e -p "Firma: " -i "$varCustomerName" varCustomerName
-    if ! [[ $varCustomerName =~ [^a-zA-Z0-9_-] ]]; then
-        varContentValid="true"
-    else
-        echo -e "\e[31mKeine gültige Eingabe!\e[39m"
-    fi
-done
-
-# Aufnehmen des Standorts
-varContentValid="false"
-while [[ $varContentValid = "false" ]]; do
-    echo "Bitte den Namen des Standorts eintragen. Bspw. Daettwil (Erlaubte Zeichen: a-z A-Z 0-9 _ )"
-    read -r -e -p "$varCustomerName-Proxy-" -i "$varLocation" varLocation
-    if ! [[ $varLocation =~ [^a-zA-Z0-9_] ]]; then
-        varContentValid="true"
-    else
-        echo -e "\e[31mKeine gültige Eingabe!\e[39m"
-    fi
-done
-
-varProxyName="$varCustomerName-Proxy-$varLocation"
-
-##################################### Start install tasks #####################################################
-CreateFolders
-PerformOperation "timedatectl set-timezone Europe/Zurich" "Set Timezone to Europe/Zurich"
-PerformOperation "apt-get update" "Update apt repositories"
-
-PerformOperation "InstallProgramm docker.io" "Install Docker Engine"
-PerformOperation "InstallProgramm $PythonVersion" "Install $PythonVersion"
-PerformOperation "InstallProgramm python3-pip" "Install PIP"
-PerformOperation "InstallSmartMonitoring" "Installing SmartMonitoring"
-
-PerformOperation "SavePSKKey" "Save Generated Zabbix PSK Key"
-
-PerformOperation "SaveSmartMonitoringConfig $varUpdateManifestUrl $varProxyName $varZabbixPSKFilePath" "Save SmartMonitoring Config"
-PerformOperation "CreateCronJob" "Create Cron Job for auto update"
-PerformOperation "CreateLoginBanner" "Create Login Banner"
-PerformOperation "smartmonitoring deploy -s" "Deploy SmartMonitoring"
-
-echo -e " \e[34m
-             _____     _     _     _         _              _     _         
-            |__  /__ _| |__ | |__ (_)_  __  | |__  _   _   | |__ | |_ ___   
-              / // _  | '_ \| '_ \| \ \/ /  | '_ \| | | |  | '_ \| __/ __|  
-             / /| (_| | |_) | |_) | |>  <   | |_) | |_| |  | |_) | || (__ _ 
-            /____\__,_|_.__/|_.__/|_/_/\_\  |_.__/ \__, |  |_.__/ \__\___(_)
-                                                   |___/
-____________________________________________________________________________________________
-
+function PrintFinishText() {
+    PrintLogo
+    echo -e " \e[34m
 Dein SmartMonitoring Proxy wurde erfolgreich Installiert!
 Erstelle nun mit folgenden Angaben den Proxy im Zabbix WebPortal.
 
@@ -281,6 +191,118 @@ Anmelden:\e[33m $varPSKidentity\e[34m
 Passwort:\e[33m
 $varPSKKey\e[39m
 "
+}
 
+function CreateCronJob() {
+    cat >/etc/cron.hourly/smartmonitoring <<EOF
+#!/bin/bash
+/usr/local/bin/smartmonitoring update -s
+EOF
+    chmod +x /etc/cron.hourly/smartmonitoring
+}
+
+function InstallSmartMonitoring() {
+    wget $varSmartMonitoringDownloadURL -O $varSmartMonitoringFileName
+    pip install $varSmartMonitoringFileName
+}
+
+function SetUbuntuSettings(){
+    # Set Timezone
+    timedatectl set-timezone Europe/Zurich
+}
+
+########################################## Script entry point ################################################
+
+PrintLogo
+echo -e " \e[34m
+This is the setup script for btc SmartMonitoring proxys.
+Please make shure, that the following conditations are met:
+- NTP Traffic is allowed to the Internet.
+- Port TCP 10051 is open to the Internet.
+- Port TCP/UDP 443 is Open to the Internet.
+
+The script can be terminated any time with Ctrl+C.
+
+\e[39m
+"
+
+# Check if executed on Ubuntu Linux.
+if ! [[ -f /etc/lsb-release ]]; then
+    error "SmartMonitoring Proxys can only be installed on Ubuntu Linux."
+fi
+
+# Check if executed as root.
+if (($EUID != 0)); then
+    error "Pleas run this script with root privileges."
+fi
+
+if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
+
+    ############################ Perform new installation ############################
+
+    # Aufnehmen des Kundennames
+    varLocation=
+    varCustomerName=
+    varContentValid="false"
+    while [[ $varContentValid = "false" ]]; do
+        echo "Please enter the name of the customer. E.G. MusterAG (Allowed characters: a-z A-Z 0-9 _ )"
+        read -r -e -p "Firma: " -i "$varCustomerName" varCustomerName
+        if ! [[ $varCustomerName =~ [^a-zA-Z0-9_-] ]]; then
+            varContentValid="true"
+        else
+            echo -e "\e[31mInvalid Input provided!\e[39m"
+        fi
+    done
+
+    # Aufnehmen des Standorts
+    varContentValid="false"
+    while [[ $varContentValid = "false" ]]; do
+        echo "Please enter the location of the customer. E.G. Daettwil (Allowed characters: a-z A-Z 0-9 _ )"
+        read -r -e -p "$varCustomerName-Proxy-" -i "$varLocation" varLocation
+        if ! [[ $varLocation =~ [^a-zA-Z0-9_] ]]; then
+            varContentValid="true"
+        else
+            echo -e "\e[31mInvalid Input provided!\e[39m"
+        fi
+    done
+
+    varProxyName="$varCustomerName-Proxy-$varLocation"
+
+    ##################################### Start install tasks #####################################################
+    echo "\nPerforming SmartMonitoring Proxys installation..."
+    CreateFolders
+    PerformOperation "SetUbuntuSettings" "Set Ubuntu settings"
+    PerformOperation "apt-get update" "Update apt cache"
+
+    PerformOperation "InstallProgramm docker.io" "Install Docker Engine"
+    PerformOperation "InstallProgramm $varPythonVersion" "Install $varPythonVersion"
+    PerformOperation "InstallProgramm python3-pip" "Install pip"
+    PerformOperation "InstallSmartMonitoring" "Install SmartMonitoring"
+
+    PerformOperation "SaveSmartMonitoringFiles $varUpdateManifestUrl $varProxyName $varZabbixPSKFilePath" "Save SmartMonitoring Files"
+    PerformOperation "CreateCronJob" "Create Cron Job for auto update"
+    PerformOperation "CreateLoginBanner" "Create Login Banner"
+    PerformOperation "smartmonitoring deploy -s -v" "Deploy SmartMonitoring"
+else
+    ############################ Perform update ############################
+    varContentValid="false"
+    while [[ $varContentValid = "false" ]]; do
+        echo "SmartMonitoring is allready installed on this system."
+        read -p "Do you want to update? (y/n): " varChoice
+        if [[ $varChoice == "n" ]]; then
+            echo "Update of SmartMonitoring cancled!"
+            exit 0
+        elif [[ $varChoice == "y" ]]; then
+            varContentValid="true"
+        else
+            echo -e "\e[31mInput not valid!\e[39m"
+        fi
+    done
+
+    PerformOperation "smartmonitoring undeploy -s -v" "Remove current SmartMonitoring Deployment"
+    PerformOperation "InstallSmartMonitoring" "Installing new Version of SmartMonitoring"
+    PerformOperation "smartmonitoring deploy -s -v" "Deploy SmartMonitoring"
+    echo "Update finished!"
+fi
 ########################################## Script end ################################################
-DeleteFile "$SmartMonitoringFileName"
+DeleteFile "$varSmartMonitoringFileName"
