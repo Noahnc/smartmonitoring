@@ -123,7 +123,7 @@ SmartMonitoring_Proxy:
   #debug_logging: true # Logs as debug if true
   #log_file_size_mb: 50 #size of a single log file
   #log_file_count: 3 #amount of log files for rotation
-  update_manifest_url: "$SmartMonitoringManifestURL"
+  update_manifest_url: "$varSmartMonitoringManifestURL"
 
   zabbix_proxy_container:
     proxy_name: $varProxyName
@@ -268,8 +268,8 @@ if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
 
     varProxyName="$varCustomerName-Proxy-$varLocation"
 
-    ##################################### Start install tasks #####################################################
-    echo "\nPerforming SmartMonitoring Proxys installation..."
+    echo ""
+    echo "################################ Perform Installtion ############################################"
     CreateFolders
     PerformOperation "SetUbuntuSettings" "Set Ubuntu settings"
     PerformOperation "apt-get update" "Update apt cache"
@@ -284,7 +284,6 @@ if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
     PerformOperation "CreateLoginBanner" "Create Login Banner"
     PerformOperation "smartmonitoring deploy -s -v" "Deploy SmartMonitoring"
 else
-    ############################ Perform update ############################
     varContentValid="false"
     while [[ $varContentValid = "false" ]]; do
         echo "SmartMonitoring is allready installed on this system."
@@ -299,10 +298,12 @@ else
         fi
     done
 
+    echo ""
+    echo "################################## Perform Update ##################################"
     PerformOperation "smartmonitoring undeploy -s -v" "Remove current SmartMonitoring Deployment"
     PerformOperation "InstallSmartMonitoring" "Installing new Version of SmartMonitoring"
     PerformOperation "smartmonitoring deploy -s -v" "Deploy SmartMonitoring"
     echo "Update finished!"
 fi
 ########################################## Script end ################################################
-DeleteFile "$varSmartMonitoringFileName"
+DeleteFile "$varSmartMonitoringFileName" &>>$varIntallerLogFile
