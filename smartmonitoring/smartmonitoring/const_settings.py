@@ -15,4 +15,4 @@ class ConfigDefaults:
     LOG_FILE_SIZE_LIMIT_MB = 50 # Max size of the log file in MB
     LOG_FILE_COUNT_LIMIT = 3 # Max number of log files
     ENABLE_DEBUG_LOGGING = False # Enable debug logging
-    UPDATE_CHANNEL = "stable" # Update channel
+    UPDATE_CHANNEL = "STABLE" # Update channel

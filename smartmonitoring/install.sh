@@ -11,6 +11,9 @@
 
 # Global variables
 PythonVersion="Python3.9"
+SmartMonitoringDownloadURL="https://github.com/Noahnc/smartmonitoring/releases/download/alpha/smartmonitoring-0.5.0.tar.gz"
+SmartMonitoringFileName="smartmonitoring.tar.gz"
+SmartMonitoringManifestURL="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
 Script_setup_directory="$(dirname -- "$0")"
 varPSKidentity="PSK_KEY"
 Script_src_directory="$(dirname "$Script_setup_directory")"
@@ -39,11 +42,18 @@ function ctrl_c() {
 
 
 function error() {
+    DeleteFile "$SmartMonitoringFileName"
     echo -e "\e[31m
 A critical error occured during installation of SmartMonitoring.
 Please check the following log file for more information:\e[39m
 $varIntallerLogFile"
     exit 1
+}
+
+function DeleteFile() {
+    if [ -f "$1" ]; then
+        rm "$1"
+    fi
 }
 
 function clearLastLine() {
@@ -58,6 +68,7 @@ function confirm_task_ok(){
 function task_error(){
     clearLastLine
     echo -e "\e[31m[ ERROR ]\e[39m $1"
+    error "$1"
 }
 
 function start_task(){
@@ -105,7 +116,7 @@ function PerformOperation() {
     comand=$1
     name=$2
     start_task "$name"
-    $comand &>> $varIntallerLogFile || error "$name"
+    $comand &>> $varIntallerLogFile || task_error "$name"
     confirm_task_ok "$name"
 }
 
@@ -122,15 +133,15 @@ function SavePSKKey() {
 function SaveSmartMonitoringConfig(){
     cat >$varSmartMonitoringConfigFilePath <<EOF
 SmartMonitoring_Proxy:
-  #update_channel: STABLE # STABLE / TESTING
+  update_channel: STABLE # STABLE / TESTING
   #debug_logging: true # Logs as debug if true
   #log_file_size_mb: 50 #size of a single log file
   #log_file_count: 3 #amount of log files for rotation
-  update_manifest_url: $1
+  update_manifest_url: "$SmartMonitoringManifestURL"
 
   zabbix_proxy_container:
-    proxy_name: $2
-    psk_key_file: /Users/noahcanadea/Dev/zabbix_enc_key.psk
+    proxy_name: $varProxyName
+    psk_key_file: "$varZabbixPSKFilePath"
 
     # Bei Local settings können lokale einstellungen für den Container übersteuert werden.
     # Ist die gleiche Variable auch im manifest definiert, hat diese hier immer vorrang.
@@ -153,6 +164,11 @@ function CreateCronJob() {
 /usr/local/bin/smartmonitoring update -s
 EOF
     chmod +x /etc/cron.hourly/smartmonitoring
+}
+
+function InstallSmartMonitoring() {
+    wget $SmartMonitoringDownloadURL -O $SmartMonitoringFileName
+    pip install $SmartMonitoringFileName
 }
 
 
@@ -218,20 +234,15 @@ PerformOperation "apt-get update" "Update apt repositories"
 
 PerformOperation "InstallProgramm docker.io" "Install Docker Engine"
 PerformOperation "InstallProgramm $PythonVersion" "Install $PythonVersion"
-
-
-# OK "SmartMonitoring wird deployed... "
-# smartmonitoring deploy -s
-# if [[ $? -ne 0 ]]; then
-#     error "Fehler beim deployen der SmartMonitoring Container"
-# fi
-# OK "SmartMonitoring wurde erfolgreich deployed"
+PerformOperation "InstallProgramm python3-pip" "Install PIP"
+PerformOperation "InstallSmartMonitoring" "Installing SmartMonitoring"
 
 PerformOperation "SavePSKKey" "Save Generated Zabbix PSK Key"
 
-PerformOperation "SaveSmartMonitoringConfig $varUpdateManifestUrl $varProxyName" "Save SmartMonitoring Config"
+PerformOperation "SaveSmartMonitoringConfig $varUpdateManifestUrl $varProxyName $varZabbixPSKFilePath" "Save SmartMonitoring Config"
 PerformOperation "CreateCronJob" "Create Cron Job for auto update"
 PerformOperation "CreateLoginBanner" "Create Login Banner"
+PerformOperation "smartmonitoring deploy -s" "Deploy SmartMonitoring"
 
 echo -e " \e[34m
              _____     _     _     _         _              _     _         
@@ -268,12 +279,8 @@ Passwort:\e[33m $varRootPassword
 Titel:\e[33m Zabbix Proxy $varProxyName PSK\e[34m
 Anmelden:\e[33m $varPSKidentity\e[34m
 Passwort:\e[33m
-$varPSKKey\e[34m
+$varPSKKey\e[39m
 "
 
 ########################################## Script end ################################################
-
-# Löschen des Projekt Ordners
-if [[ $ScriptFolderPath = *"$ProjectFolderName" ]]; then
-    rm -r "$ScriptFolderPath"
-fi
+DeleteFile "$SmartMonitoringFileName"
