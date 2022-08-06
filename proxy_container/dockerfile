@@ -1,10 +1,30 @@
+# Zabbix base Proxy MySQL container
+# https://hub.docker.com/r/zabbix/zabbix-proxy-mysql
 FROM zabbix/zabbix-proxy-mysql:6.0-ubuntu-latest
 
+# Copy SNMP MIBs to container
 WORKDIR /usr/local/share/snmp/mibs/
 COPY src/snmp_mibs ./
 
+# copy scripts to container
 WORKDIR /usr/lib/zabbix/externalscripts/
 COPY src/external_scripts/ ./
+
+# change user to root
+USER root
+
+# install required packages
+RUN apt-get update
+RUN apt-get install python3.9 -y && apt-get install pip -y
+RUN apt clean
+
+
+# install python packages
+WORKDIR /
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+RUN rm requirements.txt
+
 
 
 
