@@ -1,9 +1,9 @@
 # Zabbix Proxy Docker Image
 
-In this folder are all the necessary files to build a Zabbix Proxy Docker Image.
+In this folder are all the necessary files to build a SmartMonitoring Proxy Docker Image.
 
 - SNMP MIB files that need to be available in the Zabbix Proxy can be added to the `src/snmp_mibs` folder.
-- External Scripts are located in the `src/external:scripts` folder.
+- External Scripts can be added to the `src/external:scripts` folder. Supported are bash or python scripts.
 - The Dockerfile also installs python3.9 and all dependencies specified in the `requirements.txt` file.
 
 The following Command builds a new image for x86 and arm (make sure you are in the current folder when running the command):
@@ -11,7 +11,7 @@ The following Command builds a new image for x86 and arm (make sure you are in t
 docker buildx build --platform linux/amd64,linux/arm64 -t noahnc/smartmonitoring-proxy:<zabbix-version>-<revision-number> --push .
 ````
 
-The following example builds a image for Zabbix 6.0 with revision number 01:
+The following example builds an image for Zabbix 6.0 with revision number 01:
 ````
 docker buildx build --platform linux/amd64,linux/arm64 -t noahnc/smartmonitoring-proxy:6.0-01 --push .
 ````

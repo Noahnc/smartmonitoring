@@ -1,5 +1,5 @@
-# Hier wird das Docker Image für den MySQL und Zabbix Proxy Container spezifiziert.
-# Es gibt zwei verschiedenen Realease Cheannels (testing und stable)
+# In this manifest Containers and there required settings specified.
+# There are two different release channels, that can be used (TESTING und STABLE)
 versions:
     STABLE:
         package_version: "1.0.0"

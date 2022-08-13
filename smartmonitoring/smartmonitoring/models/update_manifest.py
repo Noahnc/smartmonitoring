@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Any, List, Tuple, TypeVar, Type, cast, Callable
+from typing import Optional, Any, List, TypeVar, Type, cast, Callable
 
 T = TypeVar("T")
 

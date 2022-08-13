@@ -22,6 +22,7 @@ def create_folder_if_not_exists(folder: os.path) -> None:
         except Exception as e:
             raise e
 
+
 def check_for_duplicates(list_of_items: list) -> bool:
     return len(list_of_items) != len(set(list_of_items))
 

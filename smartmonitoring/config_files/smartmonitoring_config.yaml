@@ -6,11 +6,11 @@ SmartMonitoring_Proxy:
   update_manifest_url: https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml
 
   zabbix_proxy_container:
-    proxy_name: MusterAG-Proxy-Zuerich
+    proxy_name: MusterAG-Proxy-Buelach
     psk_key_file: /Users/noahcanadea/Dev/zabbix_enc_key.psk
 
-    # Bei Local settings können lokale einstellungen für den Container übersteuert werden.
-    # Ist die gleiche Variable auch im manifest definiert, hat diese hier immer vorrang.
+    # With local settings, you can override static configurations from the manifest.
+    # A variable specified here takes precedence over the one from the manifest.
     #local_settings:
       #ZBX_DEBUGEVEL: 3
 

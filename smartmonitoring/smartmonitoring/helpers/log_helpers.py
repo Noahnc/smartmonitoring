@@ -7,7 +7,7 @@ from datetime import datetime
 import smartmonitoring.const_settings as cs
 from smartmonitoring import __version__
 
-start_time = None
+start_time = 1.0
 
 
 def setup_file_logger(file: os.path, level: str = "DEBUG", size: int = 50, count: int = 5) -> None:
@@ -53,10 +53,9 @@ def add_console_logger(debug: bool = False, level: str = "INFO") -> None:
 
 def __get_rotating_file_handler(file: os.path, level: str = "DEBUG", size: int = 50,
                                 count: int = 5) -> logging.handlers.RotatingFileHandler:
-    log_file_size = size * 1024 * 1024
     format_log = lg.Formatter('%(asctime)s-%(levelname)s %(message)s')
     log_file_handler = logging.handlers.RotatingFileHandler(
-        file, maxBytes=1024 * 1024 * size, backupCount=5)
+        file, maxBytes=1024 * 1024 * size, backupCount=count)
     log_file_handler.setLevel(lg.getLevelName(level))
     log_file_handler.setFormatter(format_log)
     return log_file_handler

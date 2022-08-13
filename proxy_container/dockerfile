@@ -6,9 +6,11 @@ FROM zabbix/zabbix-proxy-mysql:6.0-ubuntu-latest
 WORKDIR /usr/local/share/snmp/mibs/
 COPY src/snmp_mibs ./
 
-# copy scripts to container
+# copy scripts to container make them executable
 WORKDIR /usr/lib/zabbix/externalscripts/
 COPY src/external_scripts/ ./
+RUN chmod + x /usr/lib/zabbix/externalscripts/*.sh
+RUN chmod + x /usr/lib/zabbix/externalscripts/*.py
 
 # change user to root
 USER root

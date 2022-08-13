@@ -3,6 +3,7 @@ import os
 import socket
 import sys
 import time
+from multiprocessing import Pool
 from pathlib import Path
 
 from packaging import version
@@ -18,7 +19,7 @@ from smartmonitoring import __version__
 from smartmonitoring.handlers.data_handler import ConfigError, ManifestError, \
     ValueNotFoundInConfig, InstalledStackInvalid
 from smartmonitoring.handlers.data_handler import DataHandler
-from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable, ContainerCreateError, ImageNotFound
+from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable, ContainerCreateError
 from smartmonitoring.models.local_config import LocalConfig
 from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig
 
@@ -329,8 +330,7 @@ class MainLogic:
 
         Console().print(table)
 
-    def __generate_container_table(self, containers: list[ContainerConfig], dock: DockerHandler,
-                                   initializing: bool) -> Table:
+    def __generate_container_table(self, containers: list[ContainerConfig], initializing: bool) -> Table:
         grid = Table.grid()
         table = Table(width=cs.CLI_WIDTH, title="Container Statistics")
         grid.add_column()
@@ -344,13 +344,21 @@ class MainLogic:
         table.add_column("Image", justify="center")
         table.add_column("Memory Usage", justify="center")
         table.add_column("CPU Usage", justify="center")
-        for container_config in containers:
-            container = dock.get_container(container_config.name)
-            stats = dock.get_container_stats(container)
-            table.add_row(f'{container_config.name}', f'{container.status}', f'{container.image}',
-                          f'{stats["mem_usg_mb"]}', f'{stats["cpu_usg_present"]}')
+        cont_stats = self.get_container_statistics_parallel(containers)
+        for cont_stat in cont_stats:
+            table.add_row(f'{cont_stat["name"]}', f'{cont_stat["status"]}', f'{cont_stat["image"]}',
+                          f'{cont_stat["mem_usg_mb"]}', f'{cont_stat["cpu_usg_present"]}')
         grid.add_row("Press Ctrl+C to exit")
         return grid
+
+    def get_container_statistics_parallel(self, conf_containers: list[ContainerConfig]) -> list[dict]:
+        with Pool(len(conf_containers)) as p:
+            container_stats = p.map(self.get_container_stats_process, iter(conf_containers))
+        return container_stats
+
+    def get_container_stats_process(self, container_config: ContainerConfig) -> dict:
+        dock = DockerHandler()
+        return dock.get_container_stats(container_config)
 
     def __print_container_status(self, disable_refresh: bool, containers: list[ContainerConfig] = None) -> None:
         console = Console()
@@ -363,18 +371,17 @@ class MainLogic:
                 "[blue]Application is not deployed on this system, skipping container report.".center(cs.CLI_WIDTH))
             return
         try:
-            dock = DockerHandler()
+            DockerHandler()
         except DockerInstanceUnavailable:
             console = Console()
             console.print("[red]Error connecting to local docker daemon".center(cs.CLI_WIDTH))
             console.print("[red]Please make sure docker is running on this system".center(cs.CLI_WIDTH))
             return
         try:
-            with Live(self.__generate_container_table(containers, dock, True), auto_refresh=False) as live:
+            with Live(self.__generate_container_table(containers, True), auto_refresh=False) as live:
                 for run in range(runs):
-                    live.update(self.__generate_container_table(containers, dock, False), refresh=True)
+                    live.update(self.__generate_container_table(containers, False), refresh=True)
                     time.sleep(0.5)
             if not disable_refresh: print("Timeout reached, exiting...")
         except KeyboardInterrupt:
             print("Exit Status Dashboard".center(cs.CLI_WIDTH))
-

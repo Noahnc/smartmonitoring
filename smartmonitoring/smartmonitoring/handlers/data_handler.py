@@ -62,7 +62,7 @@ class DataHandler:
         except ConnectionError or HTTPError or Timeout as e:
             lg.error(f'Error downloading yaml from: {url} to: {file}, error message: {e}')
             raise
-        except yaml.YAMLError as e:
+        except yaml.YAMLError:
             raise
         finally:
             os.close(tf)
@@ -136,7 +136,7 @@ class DataHandler:
         container_local_config = {}
         try:
             container_local_config = self.__get_container_settings_from_local_config(local_config, container)
-        except ValueNotFoundInConfig as e:
+        except ValueNotFoundInConfig:
             if container.config.dynamic is not None:
                 lg.error(
                     f'Container has dynamic Config specified, but no configuration has been found in the local config '
@@ -159,7 +159,7 @@ class DataHandler:
     def __compose_env_variables_dynamic(self, container_local_config: dict, container: ContainerConfig) -> dict:
         env_variables = {}
         # Pull value for each dynamic setting of the container from the local config
-        if container.config.dynamic is  None:
+        if container.config.dynamic is None:
             return env_variables
         for key, value in container.config.dynamic.items():
             if value not in container_local_config:
@@ -228,10 +228,10 @@ class DataHandler:
         v = Validator(schema)
         if v.validate(config):
             lg.debug("Dict successfully validated with schema: " + str(schema))
-            return (True, "Config is Valid")
+            return True, "Config is Valid"
         else:
             lg.warning("Dict validation error: " + str(v.errors))
-            return (False, "Error found in Configuration: " + str(v.errors))
+            return False, "Error found in Configuration: " + str(v.errors)
 
     def validate_update_manifest(self, config: dict) -> tuple[bool, str]:
         assert isinstance(config, dict)
@@ -314,7 +314,7 @@ class DataHandler:
             data["smartmonitoring_version"] = __version__
             data["update_channel"] = upd_channel
             data["package_version"] = pkg_version
-            data["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            data["last_update"] = last_update
 
         lg.debug(f'Saving status: {status}')
         self.__save_json_file(self.status_file, data)
@@ -324,16 +324,16 @@ class DataHandler:
         try:
             status = self.__load_json_file(self.status_file)
             return status
-        except Exception as e:
+        except Exception:
             lg.error(f'Error getting status from file: {self.status_file}')
             raise
 
-    def __save_json_file(self, file:os.path, data: dict) -> None:
+    def __save_json_file(self, file: os.path, data: dict) -> None:
         lg.debug(f'Saving data to json file: {file}')
         with open(file, 'w') as f:
             json.dump(data, f, indent=4)
 
-    def __load_json_file(self, file:os.path) -> dict:
+    def __load_json_file(self, file: os.path) -> dict:
         lg.debug(f'Loading data from json file: {file}')
         try:
             with open(file) as f:

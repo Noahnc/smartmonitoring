@@ -12,7 +12,7 @@ CLI_LOGO_TEXT = "SmartMonitoring by btc."
 
 class ConfigDefaults:
     # Default values for the local config file
-    LOG_FILE_SIZE_LIMIT_MB = 50 # Max size of the log file in MB
-    LOG_FILE_COUNT_LIMIT = 3 # Max number of log files
-    ENABLE_DEBUG_LOGGING = False # Enable debug logging
-    UPDATE_CHANNEL = "STABLE" # Update channel
+    LOG_FILE_SIZE_LIMIT_MB = 50  # Max size of the log file in MB
+    LOG_FILE_COUNT_LIMIT = 3  # Max number of log files
+    ENABLE_DEBUG_LOGGING = False  # Enable debug logging
+    UPDATE_CHANNEL = "STABLE"  # Update channel

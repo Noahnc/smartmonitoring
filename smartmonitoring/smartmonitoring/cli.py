@@ -1,10 +1,11 @@
 import logging as lg
+
+import click
+from rich.console import Console
+
+import smartmonitoring.helpers.helper_functions as hf
 import smartmonitoring.helpers.log_helpers as lh
 from smartmonitoring.main_logic import MainLogic
-import smartmonitoring.helpers.helper_functions as hf
-import click
-import smartmonitoring.const_settings as cs
-from rich.console import Console
 
 
 @click.group()

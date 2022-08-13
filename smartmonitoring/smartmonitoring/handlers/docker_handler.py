@@ -1,5 +1,4 @@
 import logging as lg
-
 import time
 from typing import Optional
 
@@ -7,7 +6,6 @@ import docker
 from docker import errors
 from docker.errors import NotFound, APIError
 from docker.models import containers
-
 from docker.types import Mount
 
 from smartmonitoring.models.update_manifest import ContainerConfig, MappedFile, Port
@@ -50,10 +48,20 @@ class DockerHandler:
             lg.debug("Container " + container_name + " not found")
             raise
 
-    def get_container_stats(self, container: containers.Container) -> dict:
+    def get_containers_from_config(self, conf_containers: list[ContainerConfig]) -> list[containers.Container]:
+        containers = []
+        for container in conf_containers:
+            containers.append(self.get_container(container.name))
+        return containers
+
+    def get_container_stats(self, container_config: ContainerConfig) -> dict:
+        container = self.get_container(container_config.name)
         stats = container.stats(decode=False, stream=False)
         try:
             statistics = {
+                'name': container.name,
+                'status': container.status,
+                'image': container_config.image,
                 "mem_usg_mb": round(stats['memory_stats']['usage'] / 1024 / 1024, 2),
                 "cpu_usg_present": self.__calculate_cpu_usage(stats)
             }
@@ -100,7 +108,7 @@ class DockerHandler:
             container = self.get_container(container_name)
             container.restart()
             lg.debug(f'Container {container_name} restarted')
-        except APIError as e:
+        except APIError:
             lg.error(f'Error restarting container: {container_name}')
             raise
 
@@ -126,14 +134,14 @@ class DockerHandler:
             container = self.get_container(container_name)
             lg.info(f'Removing container {container_name}')
             container.remove(force=True)
-        except NotFound as e:
+        except NotFound:
             lg.debug(f'Skipping removal of container {container_name} because it does not exist')
 
     def create_inter_network(self) -> None:
         try:
             self.client.networks.get('smartmonitoring')
             lg.debug("SmartMonitoring bridge network already exists")
-        except NotFound as e:
+        except NotFound:
             self.client.networks.create(
                 "smartmonitoring", driver="bridge", check_duplicate=True, internal=True)
             lg.info(
@@ -143,7 +151,7 @@ class DockerHandler:
         try:
             self.client.networks.get('smartmonitoring').remove()
             lg.info("SmartMonitoring bridge network removed")
-        except NotFound as e:
+        except NotFound:
             lg.debug("SmartMonitoring bridge network not found, skipping removal")
 
     def __connect_container_to_inter_network(self, container: containers.Container) -> None:
@@ -168,15 +176,16 @@ class DockerHandler:
     def __check_if_image_exists(self, image_name: str) -> bool:
         try:
             image = self.client.images.get(image_name)
+            lg.debug(f'Image {image} exists')
             return True
-        except NotFound as e:
+        except NotFound:
             lg.debug(f'Image {image_name} does not exist in local docker instance')
             return False
 
-    def check_if_images_exist(self, containrers: list[ContainerConfig]) -> None:
+    def check_if_images_exist(self, containers_config: list[ContainerConfig]) -> None:
         exist = True
         not_found_images = []
-        for container in containrers:
+        for container in containers_config:
             if not self.__check_if_image_exists(container.image):
                 exist = False
                 not_found_images.append(container.image)
@@ -240,6 +249,3 @@ class DockerHandler:
         except APIError or ImageNotFound as e:
             lg.error(f'Error creating container {container.name}')
             raise ContainerCreateError(e) from e
-
-
-

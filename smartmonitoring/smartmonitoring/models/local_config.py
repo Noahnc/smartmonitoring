@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Type, TypeVar, cast, Tuple
+from typing import Dict, Optional, Any, Type, TypeVar, cast
 
 T = TypeVar("T")
+
 
 def from_none(x: Any) -> Any:
     assert x is None
@@ -15,7 +16,8 @@ def from_union(fs, x):
         except:
             pass
     assert False
-    
+
+
 def from_str(x: Any) -> str:
     assert isinstance(x, str)
     return x
@@ -25,9 +27,11 @@ def from_int(x: Any) -> int:
     assert isinstance(x, int) and not isinstance(x, bool)
     return x
 
+
 def from_bool(x: Any) -> bool:
     assert isinstance(x, bool)
     return x
+
 
 def to_class(c: Type[T], x: Any) -> dict:
     assert isinstance(x, c)
@@ -50,6 +54,7 @@ class ZabbixMysqlContainer:
         result["local_settings"] = self.local_settings
         return result
 
+
 @dataclass
 class ZabbixAgentContainer:
     smartmonitoring_status_file: str
@@ -67,6 +72,7 @@ class ZabbixAgentContainer:
         result["smartmonitoring_status_file"] = self.smartmonitoring_status_file
         result["local_settings"] = self.local_settings
         return result
+
 
 @dataclass
 class ZabbixProxyContainer:
@@ -112,9 +118,12 @@ class LocalConfig:
         log_file_count = from_int(obj.get("log_file_count"))
         update_manifest_url = from_str(obj.get("update_manifest_url"))
         zabbix_proxy_container = ZabbixProxyContainer.from_dict(obj.get("zabbix_proxy_container"))
-        zabbix_mysql_container = from_union([ZabbixMysqlContainer.from_dict, from_none], obj.get("zabbix_mysql_container"))
-        zabbix_agent_container = from_union([ZabbixAgentContainer.from_dict, from_none], obj.get("zabbix_agent_container"))
-        return LocalConfig(update_channel, debug_logging, log_file_size_mb, log_file_count, update_manifest_url, zabbix_proxy_container, zabbix_mysql_container, zabbix_agent_container)
+        zabbix_mysql_container = from_union([ZabbixMysqlContainer.from_dict, from_none],
+                                            obj.get("zabbix_mysql_container"))
+        zabbix_agent_container = from_union([ZabbixAgentContainer.from_dict, from_none],
+                                            obj.get("zabbix_agent_container"))
+        return LocalConfig(update_channel, debug_logging, log_file_size_mb, log_file_count, update_manifest_url,
+                           zabbix_proxy_container, zabbix_mysql_container, zabbix_agent_container)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -124,9 +133,8 @@ class LocalConfig:
         result["log_file_count"] = from_int(self.log_file_count)
         result["update_manifest_url"] = from_str(self.update_manifest_url)
         result["zabbix_proxy_container"] = to_class(ZabbixProxyContainer, self.zabbix_proxy_container)
-        result["zabbix_mysql_container"] = from_union([lambda x: to_class(ZabbixMysqlContainer, x), from_none], self.zabbix_mysql_container)
-        result["zabbix_agent_container"] = from_union([lambda x: to_class(ZabbixAgentContainer, x), from_none], self.zabbix_agent_container)
+        result["zabbix_mysql_container"] = from_union([lambda x: to_class(ZabbixMysqlContainer, x), from_none],
+                                                      self.zabbix_mysql_container)
+        result["zabbix_agent_container"] = from_union([lambda x: to_class(ZabbixAgentContainer, x), from_none],
+                                                      self.zabbix_agent_container)
         return result
-
-
-    
