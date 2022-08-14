@@ -151,7 +151,7 @@ def update(silent: bool, verbose: bool, force: bool):
         main_logic = MainLogic()
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Updating SmartMonitoring Application")
-        main_logic.__update_application(force)
+        main_logic.update_application(force)
     except KeyboardInterrupt:
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
