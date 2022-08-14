@@ -19,7 +19,7 @@ varPSKKey=$(openssl rand -hex 512)
 varSmartMonitoringConfFolder="/etc/smartmonitoring"
 varSmartMonitoringvarFolder="/var/smartmonitoring"
 varSmartMonitoringLogFolder="/var/log/smartmonitoring"
-varIntallerLogFile="$varSmartMonitoringLogFolder/install.log"
+varInstallerLogFile="$varSmartMonitoringLogFolder/install.log"
 varSmartMonitoringConfigFilePath="$varSmartMonitoringConfFolder/smartmonitoring_config.yaml"
 varZabbixPSKFilePath="$varSmartMonitoringConfFolder/psk_key.txt"
 
@@ -35,9 +35,9 @@ function ctrl_c() {
 function error() {
     DeleteFile "$varSmartMonitoringFileName"
     echo -e "\e[31m
-A critical error occured during installation of SmartMonitoring.
+A critical error occurred during installation of SmartMonitoring.
 Please check the following log file for more information:\e[39m
-Logfile: $varIntallerLogFile"
+Logfile: $varInstallerLogFile"
     exit 1
 }
 
@@ -73,17 +73,17 @@ function CreateFolder() {
     fi
 }
 
-function InstallProgramm() {
+function InstallProgram() {
     if ! [ -x "$(command -v $1)" ]; then
         apt-get install $1 -y
     fi
 }
 
 function PerformOperation() {
-    comand=$1
+    command=$1
     name=$2
     start_task "$name"
-    $comand &>>$varIntallerLogFile || task_error "$name"
+    $command &>>$varInstallerLogFile || task_error "$name"
     confirm_task_ok "$name"
 }
 
@@ -108,7 +108,7 @@ EOF
 }
 
 function CreateFolders() {
-    # Create SmartMonitoring foders
+    # Create SmartMonitoring folders
     CreateFolder "$varSmartMonitoringLogFolder"
     CreateFolder "$varSmartMonitoringConfFolder"
     CreateFolder "$varSmartMonitoringvarFolder"
@@ -129,8 +129,8 @@ SmartMonitoring_Proxy:
     proxy_name: $varProxyName
     psk_key_file: "$varZabbixPSKFilePath"
 
-    # Bei Local settings können lokale einstellungen für den Container übersteuert werden.
-    # Ist die gleiche Variable auch im manifest definiert, hat diese hier immer vorrang.
+    # With local settings, you can override static configurations from the manifest.
+    # A variable specified here takes precedence over the one from the manifest.
     #local_settings:
       #ZBX_DEBUGEVEL: 3
 
@@ -163,33 +163,20 @@ ________________________________________________________________________________
 function PrintFinishText() {
     PrintLogo
     echo -e " \e[34m
-Dein SmartMonitoring Proxy wurde erfolgreich Installiert!
-Erstelle nun mit folgenden Angaben den Proxy im Zabbix WebPortal.
+Install of SmartMonitoring successfully!
+Please create this proxy in the Zabbix WebPortal with the following information:
 
 Proxy Name:\e[33m $varProxyName\e[34m
 PSK Identity:\e[33m $varPSKidentity\e[34m
 512bit PSK Key:\e[33m
 $varPSKKey\e[34m
 
-Erstelle ausserdem einen neuen Host mit folgenden Angaben:
+Please also create the following host object in Zabbix:
 
 Host name:\e[33m $varProxyName\e[34m
 Groups:\e[33m Device_Zabbix-proxys\e[34m
-Templates:\e[33m Zabbix-proxys\e[34m
-
-____________________________________________________________________________________________
-
-Trage ausserdem folgende Angaben im Keeper ein:
-
-\e[34m
-Titel:\e[33m Zabbix $varProxyName SSH Login\e[34m
-Anmelden:\e[33m root\e[34m
-Passwort:\e[33m $varRootPassword
-\e[34m
-Titel:\e[33m Zabbix Proxy $varProxyName PSK\e[34m
-Anmelden:\e[33m $varPSKidentity\e[34m
-Passwort:\e[33m
-$varPSKKey\e[39m
+Templates:\e[33m btc SmartMonitoring Proxy\e[34m
+Interface Agent:\e[33m zabbix-agent2-container\e[34m
 "
 }
 
@@ -274,15 +261,17 @@ if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
     PerformOperation "SetUbuntuSettings" "Set Ubuntu settings"
     PerformOperation "apt-get update" "Update apt cache"
 
-    PerformOperation "InstallProgramm docker.io" "Install Docker Engine"
-    PerformOperation "InstallProgramm $varPythonVersion" "Install $varPythonVersion"
-    PerformOperation "InstallProgramm python3-pip" "Install pip"
+    PerformOperation "InstallProgram docker.io" "Install Docker Engine"
+    PerformOperation "InstallProgram $varPythonVersion" "Install $varPythonVersion"
+    PerformOperation "InstallProgram python3-pip" "Install pip"
     PerformOperation "InstallSmartMonitoring" "Install SmartMonitoring"
 
     PerformOperation "SaveSmartMonitoringFiles $varUpdateManifestUrl $varProxyName $varZabbixPSKFilePath" "Save SmartMonitoring Files"
     PerformOperation "CreateCronJob" "Create Cron Job for auto update"
     PerformOperation "CreateLoginBanner" "Create Login Banner"
     PerformOperation "smartmonitoring deploy -s -v" "Deploy SmartMonitoring"
+
+    PrintFinishText
 else
     varContentValid="false"
     while [[ $varContentValid = "false" ]]; do
@@ -306,4 +295,4 @@ else
     echo "Update finished!"
 fi
 ########################################## Script end ################################################
-DeleteFile "$varSmartMonitoringFileName" &>>$varIntallerLogFile
+DeleteFile "$varSmartMonitoringFileName" &>>$varInstallerLogFile

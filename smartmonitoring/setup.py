@@ -19,6 +19,7 @@ setup(
         'pyfiglet',
         'termcolor',
         'deepdiff',
+        'psutil'
     ],
     python_requires='>=3.9',
     entry_points='''

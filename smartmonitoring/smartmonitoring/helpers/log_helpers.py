@@ -15,7 +15,7 @@ def setup_file_logger(file: os.path, level: str = "DEBUG", size: int = 50, count
     main_logger = lg.getLogger()
     main_logger.setLevel(lg.getLevelName("DEBUG"))
     main_logger.addHandler(
-        __get_rotating_file_handler(file, level, size, count))
+        __compose_rotating_file_handler(file, level, size, count))
     lg.debug("Settings for file-logger set - Level: " + level + ", file: " + file +
              ", file-size: " + str(log_file_size) + " byte, backup count: " + str(count))
 
@@ -51,8 +51,8 @@ def add_console_logger(debug: bool = False, level: str = "INFO") -> None:
     lg.debug(f'Settings for console-logger set - Level: {level}')
 
 
-def __get_rotating_file_handler(file: os.path, level: str = "DEBUG", size: int = 50,
-                                count: int = 5) -> logging.handlers.RotatingFileHandler:
+def __compose_rotating_file_handler(file: os.path, level: str = "DEBUG", size: int = 50,
+                                    count: int = 5) -> logging.handlers.RotatingFileHandler:
     format_log = lg.Formatter('%(asctime)s-%(levelname)s %(message)s')
     log_file_handler = logging.handlers.RotatingFileHandler(
         file, maxBytes=1024 * 1024 * size, backupCount=count)

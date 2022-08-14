@@ -151,7 +151,7 @@ def update(silent: bool, verbose: bool, force: bool):
         main_logic = MainLogic()
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Updating SmartMonitoring Application")
-        main_logic.update_application(force)
+        main_logic.__update_application(force)
     except KeyboardInterrupt:
         lg.warning("KeyboardInterrupt detected. Exiting...")
     except Exception as e:
@@ -174,7 +174,7 @@ def status(verbose: bool, disable_refresh: bool):
     """Prints status information of the currently installed application stack."""
     try:
         main_logic = MainLogic()
-        lh.add_console_logger(debug=verbose, level="ERROR")
+        lh.add_console_logger(debug=verbose, level="CRITICAL")
         lh.log_start("Read and print status of Application")
         if verbose: disable_refresh = True
         main_logic.print_status(disable_refresh)

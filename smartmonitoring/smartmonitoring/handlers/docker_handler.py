@@ -55,23 +55,36 @@ class DockerHandler:
         return containers
 
     def get_container_stats(self, container_config: ContainerConfig) -> dict:
-        container = self.get_container(container_config.name)
-        stats = container.stats(decode=False, stream=False)
+        container = None
         try:
-            statistics = {
-                'name': container.name,
-                'status': container.status,
-                'image': container_config.image,
-                "mem_usg_mb": round(stats['memory_stats']['usage'] / 1024 / 1024, 2),
-                "cpu_usg_present": self.__calculate_cpu_usage(stats)
-            }
-        except KeyError as e:
-            lg.warning(f'Error getting statistics for Container {container.name} {e}')
-            statistics = {
-                "mem_usg_mb": "N/A",
-                "cpu_usg_present": "N/A"
-            }
-        return statistics
+            container = self.get_container(container_config.name)
+            name = container.name
+            status = container.status
+            image = container_config.image
+        except NotFound:
+            name = container_config.name
+            status = "Not found"
+            image = "-"
+            mem_usage_mb = "-"
+            mem_usage_percent = "-"
+
+        if container is not None:
+            try:
+                stats = container.stats(decode=False, stream=False)
+                mem_usage_mb = str(round(stats['memory_stats']['usage'] / 1024 / 1024, 2)) + " MB"
+                mem_usage_percent = str(self.__calculate_cpu_usage(stats)) + " %"
+            except KeyError as e:
+                lg.debug(f'Error getting statistics for Container {container.name} {e}')
+                mem_usage_mb = "N/A"
+                mem_usage_percent = "N/A"
+
+        return {
+            'name': name,
+            'status': status,
+            'image': image,
+            "mem_usg_mb": mem_usage_mb,
+            "cpu_usg_present": mem_usage_percent
+        }
 
     def __calculate_cpu_usage(self, stats: dict) -> float:
         usage_delta = stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage']
