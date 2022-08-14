@@ -198,7 +198,7 @@ class MainLogic:
         self.cfh.remove_var_data_files()
         lg.info("SmartMonitoring application successfully removed...")
 
-    def __update_application(self, force: bool) -> None:
+    def update_application(self, force: bool) -> None:
         if not self.__check_if_deployed():
             lg.warning("SmartMonitoring is not deployed on this system. Please deploy SmartMonitoring first.")
             return

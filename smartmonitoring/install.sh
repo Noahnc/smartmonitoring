@@ -10,7 +10,7 @@
 
 # Global config variables
 varPythonVersion="Python3.9"
-varSmartMonitoringDownloadURL="https://github.com/Noahnc/smartmonitoring/releases/download/current/smartmonitoring-0.6.0.tar.gz"
+varSmartMonitoringDownloadURL="https://github.com/Noahnc/smartmonitoring/releases/download/current/smartmonitoring-0.6.1.tar.gz"
 varSmartMonitoringManifestURL="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
 
 varPSKidentity="PSK_KEY"
