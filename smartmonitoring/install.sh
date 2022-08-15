@@ -28,7 +28,7 @@ trap ctrl_c INT
 
 function ctrl_c() {
     echo ""
-    echo -e "\e[31mInstall manually terminated.\e[39m"
+    echo -e "\e[31mInstallation manually terminated.\e[39m"
     exit 2
 }
 
@@ -64,7 +64,7 @@ function task_error() {
 }
 
 function start_task() {
-    echo "[ RUNNING ] $1"
+    echo "\e[80m[ RUNNING ]\e[39m $1"
 }
 
 function CreateFolder() {
@@ -163,7 +163,7 @@ ________________________________________________________________________________
 function PrintFinishText() {
     PrintLogo
     echo -e " \e[34m
-Install of SmartMonitoring successfully!
+Installation of SmartMonitoring successfully completed.
 Please create this proxy in the Zabbix WebPortal with the following information:
 
 Proxy Name:\e[33m $varProxyName\e[34m
@@ -171,12 +171,13 @@ PSK Identity:\e[33m $varPSKidentity\e[34m
 512bit PSK Key:\e[33m
 $varPSKKey\e[34m
 
-Please also create the following host object in Zabbix:
+Also create the following host object in Zabbix:
 
 Host name:\e[33m $varProxyName\e[34m
 Groups:\e[33m Device_Zabbix-proxys\e[34m
 Templates:\e[33m btc SmartMonitoring Proxy\e[34m
 Interface Agent:\e[33m zabbix-agent2-container\e[34m
+\e[39m
 "
 }
 
@@ -202,13 +203,13 @@ function SetUbuntuSettings(){
 
 PrintLogo
 echo -e " \e[34m
-This is the setup script for btc SmartMonitoring proxys.
-Please make shure, that the following conditations are met:
+This is the setup script for btc SmartMonitoring Proxy's.
+Please make sure, that the following conditions are met:
 - NTP Traffic is allowed to the Internet.
-- Port TCP 10051 is open to the Internet.
-- Port TCP/UDP 443 is Open to the Internet.
+- Traffic on TCP 10051 is allowed to the Internet.
+- Traffic on TCP/UDP 443 is allowed to the Internet.
 
-The script can be terminated any time with Ctrl+C.
+This script can be terminated any time with Ctrl+C.
 
 \e[39m
 "
