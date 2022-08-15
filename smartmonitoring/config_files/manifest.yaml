@@ -1,8 +1,8 @@
 # In this manifest Containers and there required settings specified.
-# There are two different release channels, that can be used (TESTING und STABLE)
+# There are two different release channels that can be used (TESTING und STABLE)
 versions:
     STABLE:
-        package_version: "1.0.0"
+        package_version: "1.0.3"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
@@ -16,7 +16,7 @@ versions:
                 TZ: UTC
                 MYSQL_USER: zabbix
                 MYSQL_DATABASE: zabbix_proxy
-              
+
               secrets:
                 MYSQL_PASSWORD: mysql_password
                 MYSQL_ROOT_PASSWORD: mysql_root_pw
@@ -38,7 +38,7 @@ versions:
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
-            image: noahnc/smartmonitoring-proxy:6.0
+            image: noahnc/smartmonitoring-proxy:6.0-01
             privileged: false
             files:
               - name: psk_encryption_key
@@ -59,17 +59,20 @@ versions:
                 DB_SERVER_HOST: zabbix-mysql-container
                 ZBX_TIMEOUT: 15
                 ZBX_STARTPOLLERS: 10
-                ZBX_DEBUGLEVEL: 4
+                ZBX_DEBUGLEVEL: 3
                 ZBX_TLSCONNECT: psk
                 ZBX_TLSACCEPT: psk
                 ZBX_TLSPSKIDENTITY: PSK_KEY
                 ZBX_TLSPSKFILE: /var/lib/zabbix/ssl/keys/key.psk
+                ZBX_LOGREMOTECOMMANDS: 0
+                ZBX_CONFIGFREQUENCY: 360
+                ZBX_STARTPINGERS: 6
 
               secrets: # gets replaced with generated secret
                 MYSQL_PASSWORD: mysql_password
 
     TESTING:
-        package_version: "1.0.2"
+        package_version: "1.0.3"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
@@ -126,11 +129,14 @@ versions:
                 DB_SERVER_HOST: zabbix-mysql-container
                 ZBX_TIMEOUT: 15
                 ZBX_STARTPOLLERS: 10
-                ZBX_DEBUGLEVEL: 4
+                ZBX_DEBUGLEVEL: 3
                 ZBX_TLSCONNECT: psk
                 ZBX_TLSACCEPT: psk
                 ZBX_TLSPSKIDENTITY: PSK_KEY
                 ZBX_TLSPSKFILE: /var/lib/zabbix/ssl/keys/key.psk
+                ZBX_LOGREMOTECOMMANDS: 0
+                ZBX_CONFIGFREQUENCY: 360
+                ZBX_STARTPINGERS: 6
 
               secrets: # gets replaced with generated secret
                 MYSQL_PASSWORD: mysql_password

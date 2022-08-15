@@ -6,7 +6,7 @@ import docker
 from docker import errors
 from docker.errors import NotFound, APIError
 from docker.models import containers
-from docker.types import Mount
+from docker.types import Mount, LogConfig
 
 from smartmonitoring.models.update_manifest import ContainerConfig, MappedFile, Port
 
@@ -239,6 +239,12 @@ class DockerHandler:
         lg.debug(f'Docker port bindings objects created: {port_bindings}')
         return port_bindings
 
+    def __create_container_logger(self, container_name: str) -> LogConfig:
+        return LogConfig(type=LogConfig.types.JSON, config={
+            'max-size': '500m',
+            'labels': f'{container_name}_log'
+        })
+
     def create_container(self, container: ContainerConfig, env_vars: dict, files: list[MappedFile] = None) -> None:
         self.remove_container(container.name)
         try:
@@ -255,6 +261,7 @@ class DockerHandler:
                 hostname=container.hostname,
                 mounts=mapped_files,
                 ports=mapped_ports,
+                log_config=self.__create_container_logger(container.name),
                 restart_policy={"Name": "unless-stopped"},
                 privileged=container.privileged,
                 detach=True)

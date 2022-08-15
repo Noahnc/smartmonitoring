@@ -108,7 +108,7 @@ class MainLogic:
         table.add_row()
         table.add_row("[bright_cyan]Message", "[bright_cyan]Message")
         table.add_row(f'[green]{config_message}' if config_valid else f'[red]{config_message}',
-                      f'[green]{manifest_message}' if manifest_valid else f'[green]{manifest_message}')
+                      f'[green]{manifest_message}' if manifest_valid else f'[red]{manifest_message}')
         table.add_row()
 
         Console().print(table)
