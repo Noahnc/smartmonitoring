@@ -64,7 +64,7 @@ function task_error() {
 }
 
 function start_task() {
-    echo "\e[80m[ RUNNING ]\e[39m $1"
+    echo -e "\e[36m[ RUNNING ]\e[39m $1"
 }
 
 function CreateFolder() {
