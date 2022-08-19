@@ -15,7 +15,7 @@ def main():
 
 @main.command()
 @click.option("-s", "--silent", is_flag=True, default=False,
-              help="Specify if you want to run the application in interactive mode")
+              help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def restart(silent: bool, verbose: bool):
     """Restarts all Containers of the current deployment."""
@@ -64,7 +64,7 @@ def validate_config(verbose: bool):
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 @click.option("-s", "--silent", is_flag=True, default=False,
-              help="Specify if you want to run the application in interactive mode")
+              help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 def apply_config(verbose: bool, silent: bool):
     """Validates the local configuration file and applies it if valid."""
     try:
@@ -89,7 +89,7 @@ def apply_config(verbose: bool, silent: bool):
 
 @main.command()
 @click.option("-s", "--silent", is_flag=True, default=False,
-              help="Specify if you want to run the application in interactive mode")
+              help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def deploy(silent: bool, verbose: bool):
     """Deploys the SmartMonitoring Proxy Application on this System."""
@@ -115,7 +115,7 @@ def deploy(silent: bool, verbose: bool):
 
 @main.command()
 @click.option("-s", "--silent", is_flag=True, default=False,
-              help="Specify if you want to run the application in interactive mode")
+              help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def undeploy(silent: bool, verbose: bool):
     """Removes the SmartMonitoring Application from this system."""
@@ -141,7 +141,7 @@ def undeploy(silent: bool, verbose: bool):
 
 @main.command()
 @click.option("-s", "--silent", is_flag=True, default=False,
-              help="Specify if you want to run the application in interactive mode")
+              help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 @click.option("-f", "--force", is_flag=True, default=False,
               help="Applies the remote manifest even if it is not newer than the local one")
@@ -183,7 +183,7 @@ def status(verbose: bool, disable_refresh: bool):
         if verbose:
             Console().print_exception(show_locals=True)
         else:
-            lg.info('Run the application with the --debug flag to get more information.')
+            lg.info('Run the application with the --verbose flag to get more information.')
         hf.exit_with_error(1)
     finally:
         lh.log_finish()
