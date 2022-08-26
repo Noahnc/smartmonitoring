@@ -177,7 +177,7 @@ Installation of SmartMonitoring successfully completed.
 Please create this proxy in the Zabbix WebPortal with the following information:
 
 Proxy Name:\e[33m $var_proxy_name\e[34m
-PSK Identity:\e[33m $var_psk_identity\e[34m
+PSK Identity:\e[33m $var_proxy_name\e[34m
 256bit PSK Key:\e[33m
 $var_psk_key\e[34m
 
