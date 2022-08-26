@@ -2,14 +2,14 @@
 # There are two different release channels that can be used (TESTING und STABLE)
 versions:
     STABLE:
-        package_version: "1.0.4"
+        package_version: "1.0.5"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
-            image: ubuntu/mysql:8.0-20.04_edge
+            image: ubuntu/8.0-22.04_edge
             privileged: false
             config:
               static:
@@ -23,7 +23,7 @@ versions:
 
           - name: zabbix_agent_container
             hostname: zabbix-agent2-container
-            image: zabbix/zabbix-agent:6.0-ubuntu-latest
+            image: zabbix/zabbix-agent:6.0.7-ubuntu
             privileged: true
             files:
               - name: status_file
@@ -72,14 +72,14 @@ versions:
                 MYSQL_PASSWORD: mysql_password
 
     TESTING:
-        package_version: "1.0.4"
+        package_version: "1.0.5"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
-            image: ubuntu/mysql:8.0-20.04_edge
+            image: ubuntu/8.0-22.04_edge
             privileged: false
             config:
               static:
@@ -93,7 +93,7 @@ versions:
 
           - name: zabbix_agent_container
             hostname: zabbix-agent2-container
-            image: zabbix/zabbix-agent:6.0-ubuntu-latest
+            image: zabbix/zabbix-agent:6.0.7-ubuntu
             privileged: true
             files:
               - name: status_file
