@@ -2,14 +2,18 @@
 # There are two different release channels that can be used (TESTING und STABLE)
 versions:
     STABLE:
-        package_version: "1.0.3"
+        package_version: "1.0.5"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
+<<<<<<< HEAD:smartmonitoring-cli/config_files/manifest.yaml
             image: ubuntu/mysql:8.0-22.04_edge
+=======
+            image: ubuntu/8.0-22.04_edge
+>>>>>>> 452e8985c4088f13924d39b780d22159e15a5363:smartmonitoring/config_files/manifest.yaml
             privileged: false
             config:
               static:
@@ -52,6 +56,7 @@ versions:
             config:
               dynamic: #Looks up specified key in local config of container
                 ZBX_HOSTNAME: proxy_name
+                ZBX_TLSPSKIDENTITY: proxy_name
 
               static:
                 ZBX_SERVER_HOST: monitoring.smartcollab.ch
@@ -62,7 +67,6 @@ versions:
                 ZBX_DEBUGLEVEL: 3
                 ZBX_TLSCONNECT: psk
                 ZBX_TLSACCEPT: psk
-                ZBX_TLSPSKIDENTITY: PSK_KEY
                 ZBX_TLSPSKFILE: /var/lib/zabbix/ssl/keys/key.psk
                 ZBX_LOGREMOTECOMMANDS: 0
                 ZBX_CONFIGFREQUENCY: 360
@@ -72,14 +76,18 @@ versions:
                 MYSQL_PASSWORD: mysql_password
 
     TESTING:
-        package_version: "1.0.3"
+        package_version: "1.0.5"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
+<<<<<<< HEAD:smartmonitoring-cli/config_files/manifest.yaml
             image: ubuntu/mysql:8.0-22.04_edge
+=======
+            image: ubuntu/8.0-22.04_edge
+>>>>>>> 452e8985c4088f13924d39b780d22159e15a5363:smartmonitoring/config_files/manifest.yaml
             privileged: false
             config:
               static:
@@ -122,6 +130,7 @@ versions:
             config:
               dynamic: #Looks up specified key in local config of container
                 ZBX_HOSTNAME: proxy_name
+                ZBX_TLSPSKIDENTITY: proxy_name
 
               static:
                 ZBX_SERVER_HOST: monitoring.smartcollab.ch
@@ -132,7 +141,6 @@ versions:
                 ZBX_DEBUGLEVEL: 3
                 ZBX_TLSCONNECT: psk
                 ZBX_TLSACCEPT: psk
-                ZBX_TLSPSKIDENTITY: PSK_KEY
                 ZBX_TLSPSKFILE: /var/lib/zabbix/ssl/keys/key.psk
                 ZBX_LOGREMOTECOMMANDS: 0
                 ZBX_CONFIGFREQUENCY: 360
