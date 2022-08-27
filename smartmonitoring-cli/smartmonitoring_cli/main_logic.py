@@ -32,9 +32,9 @@ PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 class MainLogic:
     def __init__(self):
         if sys.platform.startswith("linux"):
-            self.smartmonitoring_config_dir = Path("/etc/smartmonitoring_cli")
-            self.smartmonitoring_log_dir = Path("/var/log/smartmonitoring_cli")
-            self.smartmonitoring_var_dir = Path("/var/smartmonitoring_cli")
+            self.smartmonitoring_config_dir = Path("/etc/smartmonitoring")
+            self.smartmonitoring_log_dir = Path("/var/log/smartmonitoring")
+            self.smartmonitoring_var_dir = Path("/var/smartmonitoring")
         else:
             self.smartmonitoring_config_dir = os.path.join(PARENT_FOLDER, "config_files")
             self.smartmonitoring_log_dir = os.path.join(PARENT_FOLDER, "logs")
