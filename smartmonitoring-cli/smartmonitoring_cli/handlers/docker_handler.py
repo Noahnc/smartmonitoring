@@ -8,7 +8,7 @@ from docker.errors import NotFound, APIError
 from docker.models import containers
 from docker.types import Mount, LogConfig
 
-from smartmonitoring.models.update_manifest import ContainerConfig, MappedFile, Port
+from smartmonitoring_cli.models.update_manifest import ContainerConfig, MappedFile, Port
 
 
 class DockerInstanceUnavailable(Exception):
@@ -19,7 +19,7 @@ class ContainerCreateError(Exception):
     pass
 
 
-class ImageNotFound(Exception):
+class ImageDoesNotExist(Exception):
     pass
 
 
@@ -152,23 +152,23 @@ class DockerHandler:
 
     def create_inter_network(self) -> None:
         try:
-            self.client.networks.get('smartmonitoring')
+            self.client.networks.get('smartmonitoring_cli')
             lg.debug("SmartMonitoring bridge network already exists")
         except NotFound:
             self.client.networks.create(
-                "smartmonitoring", driver="bridge", check_duplicate=True, internal=True)
+                "smartmonitoring_cli", driver="bridge", check_duplicate=True, internal=True)
             lg.info(
                 "SmartMonitoring bridge network for container communication created")
 
     def remove_inter_network(self) -> None:
         try:
-            self.client.networks.get('smartmonitoring').remove()
+            self.client.networks.get('smartmonitoring_cli').remove()
             lg.info("SmartMonitoring bridge network removed")
         except NotFound:
             lg.debug("SmartMonitoring bridge network not found, skipping removal")
 
     def __connect_container_to_inter_network(self, container: containers.Container) -> None:
-        network = self.client.networks.get("smartmonitoring")
+        network = self.client.networks.get("smartmonitoring_cli")
         network.connect(container)
         lg.debug(f'Container {container.name} connected to SmartMonitoring bridge network')
 
@@ -195,16 +195,18 @@ class DockerHandler:
             lg.debug(f'Image {image_name} does not exist in local docker instance')
             return False
 
-    def check_if_images_exist(self, containers_config: list[ContainerConfig]) -> None:
+    def pull_images(self, containers_config: list[ContainerConfig]) -> None:
         exist = True
         not_found_images = []
         for container in containers_config:
             if not self.__check_if_image_exists(container.image):
-                exist = False
-                not_found_images.append(container.image)
-                lg.warning(f'Image {container.image} not found on Dockerhub')
+                try:
+                    self.__pull_image_if_not_exists(container.image)
+                except ImageDoesNotExist:
+                    not_found_images.append(container.image)
+                    exist = False
         if not exist:
-            raise ImageNotFound(f'The following Images where not found on Dockerhub {not_found_images}')
+            raise ImageDoesNotExist(f'Error pulling the following images from Docker hub: {not_found_images}')
 
     def __pull_image_if_not_exists(self, image: str) -> None:
         if not self.__check_if_image_exists(image):
@@ -214,7 +216,7 @@ class DockerHandler:
                 lg.debug(f'Image {image} pulled from docker hub')
             except APIError as e:
                 lg.error(f'Error pulling image {image}')
-                raise ImageNotFound(e)
+                raise ImageDoesNotExist(e)
         else:
             lg.debug(f'Image {image} already exists, skip pulling')
 
@@ -250,7 +252,6 @@ class DockerHandler:
         try:
             mapped_files = self.__compose_files(files)
             mapped_ports = self.__compose_ports(container.ports)
-            self.__pull_image_if_not_exists(container.image)
             lg.debug(
                 f'Creating container {container.name} with image {container.image}, hostname {container.hostname} and '
                 f'env {env_vars}')
@@ -266,6 +267,6 @@ class DockerHandler:
                 privileged=container.privileged,
                 detach=True)
             self.__connect_container_to_inter_network(container)
-        except APIError or ImageNotFound as e:
+        except APIError or ImageDoesNotExist as e:
             lg.error(f'Error creating container {container.name}')
             raise ContainerCreateError(e) from e

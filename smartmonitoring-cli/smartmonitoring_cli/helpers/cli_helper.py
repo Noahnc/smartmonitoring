@@ -1,7 +1,7 @@
 from rich.console import Console
 from rich.prompt import Confirm
 
-import smartmonitoring.const_settings as cs
+import smartmonitoring_cli.const_settings as cs
 from pyfiglet import Figlet
 
 

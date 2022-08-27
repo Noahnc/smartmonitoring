@@ -5,7 +5,7 @@ class ValidationSchemas:
             'type': 'string'
         },
         'dynamic_secrets': {
-            'required': False,
+            'required': True,
             'nullable': True,
             'type': 'list'
         },

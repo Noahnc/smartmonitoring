@@ -4,8 +4,8 @@ import os
 import socket
 import time
 from datetime import datetime
-import smartmonitoring.const_settings as cs
-from smartmonitoring import __version__
+import smartmonitoring_cli.const_settings as cs
+from smartmonitoring_cli import __version__
 
 start_time = 1.0
 

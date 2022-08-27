@@ -10,13 +10,13 @@ from pathlib import Path
 import logging as lg
 from cerberus import Validator
 from deepdiff import DeepDiff
-import smartmonitoring.helpers.helper_functions as hf
-from smartmonitoring import __version__
-from smartmonitoring.models.local_config import LocalConfig
-from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig, MappedFile
+import smartmonitoring_cli.helpers.helper_functions as hf
+from smartmonitoring_cli import __version__
+from smartmonitoring_cli.models.local_config import LocalConfig
+from smartmonitoring_cli.models.update_manifest import UpdateManifest, ContainerConfig, MappedFile
 from requests.exceptions import ConnectionError, Timeout, HTTPError
-from smartmonitoring.const_settings import ConfigDefaults as cfd
-from smartmonitoring.dict_validation_schemas import ValidationSchemas
+from smartmonitoring_cli.const_settings import ConfigDefaults as cfd
+from smartmonitoring_cli.dict_validation_schemas import ValidationSchemas
 
 
 class ConfigError(Exception):
@@ -61,8 +61,6 @@ class DataHandler:
             return self.__load_yaml_from_file(Path(file))
         except ConnectionError or HTTPError or Timeout as e:
             lg.error(f'Error downloading yaml from: {url} to: {file}, error message: {e}')
-            raise
-        except yaml.YAMLError:
             raise
         finally:
             os.close(tf)
@@ -129,7 +127,6 @@ class DataHandler:
         lg.debug("Local config dict successfully processed to object")
         return config
 
-    # Generates dict of environment variables for a container
     def compose_env_variables(self, local_config: LocalConfig, container: ContainerConfig,
                               cont_secrets: dict) -> dict:
         env_variables = container.config.static.copy()
@@ -208,8 +205,7 @@ class DataHandler:
 
     def __get_local_setting_of_container(self, local_config: LocalConfig, container: ContainerConfig, key: str) -> str:
         try:
-            lg.debug(f'Getting config of container: {container.name}')
-            container_local_config = getattr(local_config, container.name).to_dict()
+            container_local_config = self.__get_container_settings_from_local_config(local_config, container)
             lg.debug(f'Reading Key: {key} from local config of container: {container.name}')
             value = container_local_config[key]
             lg.debug(f'Value for key: {key} is: {value}')
@@ -217,9 +213,6 @@ class DataHandler:
                 raise ValueNotFoundInConfig(
                     f'Value for key: {key} is not found in local config of container: {container.name}')
             return value
-        except AttributeError as e:
-            lg.error(f'No config for container: {container.name} in local config found')
-            raise ValueNotFoundInConfig(f'No config for container: {container.name} in local config found') from e
         except KeyError as e:
             lg.error(f'No key: {key} in local config of Container {container} found')
             raise ValueNotFoundInConfig(f'No key: {key} in local config of Container {container} found') from e
@@ -280,10 +273,10 @@ class DataHandler:
             manifest = self.process_update_manifest(stack["manifest"])
             return config, manifest
         except Exception as e:
-            raise InstalledStackInvalid(f'Error processing installed stack from file: {self.stack_file}, message: {e}')
+            raise InstalledStackInvalid(f'Error getting installed stack from file: {self.stack_file}, message: {e}')
 
     def save_status(self, status: str, upd_channel: str = None, pkg_version: str = None, error_msg: str = "-") -> None:
-        allowed_statuses = ["Deployed", "Deploying", "UpdateError"]
+        allowed_statuses = ["Deployed", "Deploying", "DeploymentError"]
         if status not in allowed_statuses:
             raise ValueError(f'Invalid status: {status}, allowed statuses: {allowed_statuses}')
         if not self.status_file.exists():

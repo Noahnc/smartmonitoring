@@ -1,16 +1,20 @@
 import logging as lg
+import os
+import sys
 
 import click
 from rich.console import Console
 
-import smartmonitoring.helpers.helper_functions as hf
-import smartmonitoring.helpers.log_helpers as lh
-from smartmonitoring.main_logic import MainLogic
+import smartmonitoring_cli.helpers.log_helpers as lh
+from smartmonitoring_cli.main_logic import MainLogic
 
 
 @click.group()
 def main():
-    pass
+    if sys.platform.startswith("linux"):
+        if os.geteuid() != 0:
+            print("You need to have root privileges to run this script.")
+            sys.exit(1)
 
 
 @main.command()
@@ -34,7 +38,7 @@ def restart(silent: bool, verbose: bool):
             lg.debug(f'Stack trace: ', exc_info=True)
         else:
             lg.info('Run the application with the --verbose flag to get more information.')
-        hf.exit_with_error(1)
+        exit_with_error(1)
     finally:
         lh.log_finish()
 
@@ -57,6 +61,7 @@ def validate_config(verbose: bool):
             Console().print_exception(show_locals=True)
         else:
             lg.info('Run the application with the --verbose flag to get more information.')
+        exit_with_error(1)
     finally:
         if verbose: lh.log_finish()
 
@@ -82,7 +87,7 @@ def apply_config(verbose: bool, silent: bool):
             lg.debug(f'Stack trace: ', exc_info=True)
         else:
             lg.info('Run the application with the --verbose flag to get more information.')
-        hf.exit_with_error(1)
+        exit_with_error(1)
     finally:
         lh.log_finish()
 
@@ -108,7 +113,7 @@ def deploy(silent: bool, verbose: bool):
             lg.debug(f'Stack trace: ', exc_info=True)
         else:
             lg.info('Run the application with the --verbose flag to get more information.')
-        hf.exit_with_error(1)
+        exit_with_error(1)
     finally:
         lh.log_finish()
 
@@ -134,7 +139,7 @@ def undeploy(silent: bool, verbose: bool):
             lg.debug(f'Stack trace: ', exc_info=True)
         else:
             lg.info('Run the application with the --verbose flag to get more information.')
-        hf.exit_with_error(1)
+        exit_with_error(1)
     finally:
         lh.log_finish()
 
@@ -146,7 +151,7 @@ def undeploy(silent: bool, verbose: bool):
 @click.option("-f", "--force", is_flag=True, default=False,
               help="Applies the remote manifest even if it is not newer than the local one")
 def update(silent: bool, verbose: bool, force: bool):
-    """Checks if a newer Version is available and updates the Application if so."""
+    """Checks if a newer Version is available and updates the Deployment if so."""
     try:
         main_logic = MainLogic()
         main_logic.setup_logging(verbose, silent)
@@ -162,7 +167,7 @@ def update(silent: bool, verbose: bool, force: bool):
             lg.debug(f'Stack trace: ', exc_info=True)
         else:
             lg.info('Run the application with the --verbose flag to get more information.')
-        hf.exit_with_error(1)
+        exit_with_error(1)
     finally:
         lh.log_finish()
 
@@ -170,20 +175,25 @@ def update(silent: bool, verbose: bool, force: bool):
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 @click.option("--disable-refresh", is_flag=True, default=False, help="Disables automatic refresh of the Dashboard")
-def status(verbose: bool, disable_refresh: bool):
-    """Prints status information of the currently installed application stack."""
+@click.option("--banner-version", is_flag=True, default=False, help="Prints reduced information for the shell login banner")
+def status(verbose: bool, disable_refresh: bool, banner_version: bool):
+    """Show a status dashboard with important metrics."""
     try:
         main_logic = MainLogic()
         lh.add_console_logger(debug=verbose, level="CRITICAL")
         lh.log_start("Read and print status of Application")
         if verbose: disable_refresh = True
-        main_logic.print_status(disable_refresh)
+        main_logic.print_status(disable_refresh, banner_version)
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if verbose:
             Console().print_exception(show_locals=True)
         else:
             lg.info('Run the application with the --verbose flag to get more information.')
-        hf.exit_with_error(1)
+        exit_with_error(1)
     finally:
         lh.log_finish()
+
+def exit_with_error(code: int) -> None:
+    lg.critical(f'Exiting with error code {code} because of an critical error.')
+    exit(code)

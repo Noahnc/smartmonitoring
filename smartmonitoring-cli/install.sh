@@ -4,18 +4,18 @@
 #         Copyright © by Noah Canadea | All rights reserved
 ########################################################################
 #                           Description
-#       Bash Script to setup a smartmonitoring proxy server
+#       Bash Script to setup a smartmonitoring_cli proxy server
 #
 #                    Version 1.0 | 19.08.2022
 
 # Global config variables
-var_python_version="Python3.9"
-var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/0.6.2/smartmonitoring-0.6.2.tar.gz"
+var_python_version="Python3.10"
+var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/0.7.0/smartmonitoring_cli-0.7.0.tar.gz"
 var_smartmonitoring_update_manifest_url="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
-
+var_psk_size_bit=256
 var_psk_identity="PSK_KEY"
 var_smartmonitoring_file_name="smartmonitoring.tar.gz"
-var_psk_key=$(openssl rand -hex 512)
+var_psk_key=$(openssl rand -hex "$var_psk_size_bit")
 var_smartmonitoring_config_folder="/etc/smartmonitoring"
 var_smartmonitoring_var_folder="/var/smartmonitoring"
 var_smartmonitoring_log_folder="/var/log/smartmonitoring"
@@ -33,7 +33,7 @@ function ctrl_c() {
 }
 
 function error() {
-    # Delete downloaded smartmonitoring sdist file
+    # Delete downloaded smartmonitoring_cli sdist file
     DeleteFile "$var_smartmonitoring_file_name"
     echo -e "\e[31m
 A critical error occurred during installation of SmartMonitoring.
@@ -99,6 +99,7 @@ function perform_operation() {
 function create_login_banner() {
     # Delete some not needed default banners from ubuntu
     delete_file "/etc/motd"
+    delete_file "/etc/update-motd.d/00-smartmonitoring"
     delete_file "/etc/update-motd.d/10-uname"
     delete_file "/etc/update-motd.d/20-hints"
     delete_file "/etc/update-motd.d/50-banner"
@@ -107,9 +108,9 @@ function create_login_banner() {
     delete_file "/etc/update-motd.d/88-esm-announce"
 
     # Create new motd file
-    cat >/etc/update-motd.d/00-smartmonitoring <<EOF
+    cat >/etc/update-motd.d/00-smartmonitoring-cli <<EOF
 #!/bin/bash
-smartmonitoring status --disable-refresh        
+smartmonitoring status --banner-version
 EOF
     # Make the file executable
     chmod a+x /etc/update-motd.d/*
@@ -122,7 +123,7 @@ function create_folders() {
     create_folder "$var_smartmonitoring_var_folder"
 }
 
-# generates and saves the smartmonitoring local config file
+# generates and saves the smartmonitoring_cli local config file
 function save_smartmonitoring_files() {
     cat >$var_smartmonitoring_config_file_path <<EOF
 SmartMonitoring_Proxy:
@@ -178,7 +179,7 @@ Please create this proxy in the Zabbix WebPortal with the following information:
 
 Proxy Name:\e[33m $var_proxy_name\e[34m
 PSK Identity:\e[33m $var_psk_identity\e[34m
-256bit PSK Key:\e[33m
+$var_psk_size_bit bit PSK Key:\e[33m
 $var_psk_key\e[34m
 
 Also create the following host object in Zabbix:
@@ -193,14 +194,14 @@ Interface Agent:\e[33m zabbix-agent2-container\e[34m
 
 # creates a hourly running cron job
 function create_cron_job() {
-    cat >/etc/cron.hourly/smartmonitoring <<EOF
+    cat >/etc/cron.hourly/smartmonitoring-cli <<EOF
 #!/bin/bash
 /usr/local/bin/smartmonitoring update -s
 EOF
-    chmod +x /etc/cron.hourly/smartmonitoring
+    chmod +x /etc/cron.hourly/smartmonitoring-cli
 }
 
-# downloads and installs smartmonitoring sdist package
+# downloads and installs smartmonitoring_cli sdist package
 function install_smartmonitoring() {
     wget $var_smartmonitoring_download_url -O $var_smartmonitoring_file_name
     pip install $var_smartmonitoring_file_name
@@ -238,7 +239,7 @@ if (($EUID != 0)); then
     error "Pleas run this script with root privileges."
 fi
 
-# Check if smartmonitoring is already installed.
+# Check if smartmonitoring_cli is already installed.
 if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
 
     ############################ Perform new installation ############################
@@ -291,7 +292,7 @@ if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
 
     print_finish_text
 else
-  # Ask if smartmonitoring tool should be updated
+  # Ask if smartmonitoring_cli-cli should be updated
     var_content_valid="false"
     while [[ $var_content_valid = "false" ]]; do
         echo "SmartMonitoring is already installed on this system."
@@ -309,7 +310,9 @@ else
     echo ""
     echo "################################## Perform Update ##################################"
     perform_operation "smartmonitoring undeploy -s -v" "Remove current SmartMonitoring Deployment..."
+    perform_operation "install_program $var_python_version" "Updating Python..."
     perform_operation "install_smartmonitoring" "Installing new Version of SmartMonitoring Updater..."
+    perform_operation "create_login_banner" "Updating Login Banner..."
     perform_operation "smartmonitoring deploy -s -v" "Deploy SmartMonitoring..."
     echo "Update finished!"
 fi

@@ -1,12 +1,6 @@
 import os
 from pathlib import Path
 
-import psutil
-
-from smartmonitoring import const_settings as cs
-from smartmonitoring.handlers.data_handler import DataHandler
-from smartmonitoring.handlers.docker_handler import DockerHandler
-from smartmonitoring.main_logic import MainLogic
 
 # PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 #
@@ -28,6 +22,7 @@ from smartmonitoring.main_logic import MainLogic
 #     test = main.get_container_statistics_parallel(manifest.containers)
 #     print(test)
 
-import platform
-print(psutil.disk_usage("/").percent)
-print(psutil.virtual_memory().percent)
+import socket
+
+
+

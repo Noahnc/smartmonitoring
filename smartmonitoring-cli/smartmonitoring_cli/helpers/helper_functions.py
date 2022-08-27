@@ -1,5 +1,6 @@
 import logging as lg
 import os
+import socket
 
 
 def delete_file_if_exists(filename) -> None:
@@ -22,15 +23,14 @@ def create_folder_if_not_exists(folder: os.path) -> None:
         except Exception as e:
             raise e
 
-
-def check_for_duplicates(list_of_items: list) -> bool:
-    return len(list_of_items) != len(set(list_of_items))
-
-
-def exit_with_error(code: int) -> None:
-    lg.critical(f'Exiting with error code {code} because of an critical error.')
-    exit(code)
-
+def get_local_ip_address() -> str:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        return str(s.getsockname()[0])
+    except Exception as e:
+        lg.debug("Error getting local ip address: " + str(e))
+        return "unknown"
 
 def get_public_ip_address() -> str:
     import requests

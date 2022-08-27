@@ -9,7 +9,7 @@ versions:
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
-            image: ubuntu/mysql:8.0-20.04_edge
+            image: ubuntu/mysql:8.0-22.04_edge
             privileged: false
             config:
               static:
@@ -23,7 +23,7 @@ versions:
 
           - name: zabbix_agent_container
             hostname: zabbix-agent2-container
-            image: zabbix/zabbix-agent:6.0-ubuntu-latest
+            image: zabbix/zabbix-agent:6.0.7-ubuntu
             privileged: true
             files:
               - name: status_file
@@ -38,7 +38,7 @@ versions:
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
-            image: noahnc/smartmonitoring-proxy:6.0-01
+            image: noahnc/smartmonitoring_cli-proxy:6.0-01
             privileged: false
             files:
               - name: psk_encryption_key
@@ -79,7 +79,7 @@ versions:
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
-            image: ubuntu/mysql:8.0-20.04_edge
+            image: ubuntu/mysql:8.0-22.04_edge
             privileged: false
             config:
               static:
@@ -93,7 +93,7 @@ versions:
 
           - name: zabbix_agent_container
             hostname: zabbix-agent2-container
-            image: zabbix/zabbix-agent:6.0-ubuntu-latest
+            image: zabbix/zabbix-agent:6.0.7-ubuntu
             privileged: true
             files:
               - name: status_file
@@ -108,7 +108,7 @@ versions:
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
-            image: noahnc/smartmonitoring-proxy:6.0-01
+            image: noahnc/smartmonitoring_cli-proxy:6.0-01
             privileged: false
             files:
               - name: psk_encryption_key

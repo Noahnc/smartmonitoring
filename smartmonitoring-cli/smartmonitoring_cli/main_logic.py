@@ -3,27 +3,28 @@ import os
 import platform
 import socket
 import sys
-import psutil
 import time
 from multiprocessing import Pool
 from pathlib import Path
 
+import psutil
 from packaging import version
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table
 
-import smartmonitoring.const_settings as cs
-import smartmonitoring.helpers.cli_helper as cli
-import smartmonitoring.helpers.helper_functions as hf
-import smartmonitoring.helpers.log_helpers as lh
-from smartmonitoring import __version__
-from smartmonitoring.handlers.data_handler import ConfigError, ManifestError, \
+import smartmonitoring_cli.const_settings as cs
+import smartmonitoring_cli.helpers.cli_helper as cli
+import smartmonitoring_cli.helpers.helper_functions as hf
+import smartmonitoring_cli.helpers.log_helpers as lh
+from smartmonitoring_cli import __version__
+from smartmonitoring_cli.handlers.data_handler import ConfigError, ManifestError, \
     ValueNotFoundInConfig, InstalledStackInvalid
-from smartmonitoring.handlers.data_handler import DataHandler
-from smartmonitoring.handlers.docker_handler import DockerHandler, DockerInstanceUnavailable, ContainerCreateError
-from smartmonitoring.models.local_config import LocalConfig
-from smartmonitoring.models.update_manifest import UpdateManifest, ContainerConfig
+from smartmonitoring_cli.handlers.data_handler import DataHandler
+from smartmonitoring_cli.handlers.docker_handler import DockerHandler, ContainerCreateError, \
+    ImageDoesNotExist
+from smartmonitoring_cli.models.local_config import LocalConfig
+from smartmonitoring_cli.models.update_manifest import UpdateManifest, ContainerConfig
 
 PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 
@@ -31,9 +32,9 @@ PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 class MainLogic:
     def __init__(self):
         if sys.platform.startswith("linux"):
-            self.smartmonitoring_config_dir = Path("/etc/smartmonitoring")
-            self.smartmonitoring_log_dir = Path("/var/log/smartmonitoring")
-            self.smartmonitoring_var_dir = Path("/var/smartmonitoring")
+            self.smartmonitoring_config_dir = Path("/etc/smartmonitoring_cli")
+            self.smartmonitoring_log_dir = Path("/var/log/smartmonitoring_cli")
+            self.smartmonitoring_var_dir = Path("/var/smartmonitoring_cli")
         else:
             self.smartmonitoring_config_dir = os.path.join(PARENT_FOLDER, "config_files")
             self.smartmonitoring_log_dir = os.path.join(PARENT_FOLDER, "logs")
@@ -129,7 +130,7 @@ class MainLogic:
             self.cfh.validate_config_against_manifest(new_config, manifest)
         except ConfigError or ValueNotFoundInConfig as e:
             lg.error(f'Config file is invalid: {e}')
-            lg.info("You can validate the config file by running 'smartmonitoring validate-config'")
+            lg.info("You can validate the config file by running 'smartmonitoring_cli validate-config'")
             return
         lg.info("Config file is valid")
         identical, changes = self.cfh.compare_local_config(current_config, new_config)
@@ -142,15 +143,21 @@ class MainLogic:
         lg.info("Applying new local configuration...")
         self.__replace_deployment(current_config, new_config, manifest, manifest)
 
-    def print_status(self, disable_refresh) -> None:
+    def print_status(self, disable_refresh: bool, banner_version: bool) -> None:
         cli.print_logo()
         if self.__check_if_deployed():
             config, manifest = self.cfh.get_installed_stack()
-            self.__print_system_status(config, manifest)
-            self.__print_live_updating_tables(disable_refresh, manifest.containers)
+            if not banner_version:
+                self.__print_system_status(config, manifest)
+                self.__print_live_updating_tables(disable_refresh, manifest.containers)
+            else:
+                self.__print_logon_banner(config, manifest)
         else:
-            self.__print_system_status()
-            self.__print_live_updating_tables(disable_refresh)
+            if not banner_version:
+                self.__print_system_status()
+                self.__print_live_updating_tables(disable_refresh)
+            else:
+                self.__print_logon_banner()
 
     def restart_application(self) -> None:
         if not self.__check_if_deployed():
@@ -160,7 +167,7 @@ class MainLogic:
             lg.warning("Deployment is in progress. Please wait until it is finished.")
             return
 
-        lg.info("Restarting smartmonitoring application...")
+        lg.info("Restarting smartmonitoring_cli application...")
         config, manifest = self.cfh.get_installed_stack()
         dock = DockerHandler()
         dock.restart_containers(manifest.containers)
@@ -170,17 +177,22 @@ class MainLogic:
         if self.__check_if_deployed():
             lg.warning("SmartMonitoring is already deployed, skipping deployment...")
             return
-        lg.info("Deploying smartmonitoring application to this system...")
+        lg.info("Deploying smartmonitoring_cli application to this system...")
         lg.info("Retrieving local configuration and update manifest...")
         config, manifest = self.cfh.get_config_and_manifest()
         dock = DockerHandler()
         self.cfh.save_status("Deploying")
-        self.cfh.validate_config_against_manifest(config, manifest)
-        dock.create_inter_network()
-        self.__install_application(config, manifest, dock)
-        self.cfh.save_installed_stack(config, manifest)
-        self.cfh.save_status("Deployed", upd_channel=config.update_channel, pkg_version=manifest.package_version)
-        lg.info("SmartMonitoring application successfully deployed...")
+        try:
+            self.cfh.validate_config_against_manifest(config, manifest)
+            dock.pull_images(manifest.containers)
+            dock.create_inter_network()
+            self.__install_application(config, manifest, dock)
+            self.cfh.save_installed_stack(config, manifest)
+            self.cfh.save_status("Deployed", upd_channel=config.update_channel, pkg_version=manifest.package_version)
+            lg.info("SmartMonitoring application successfully deployed...")
+        except ContainerCreateError or ImageDoesNotExist or ValueNotFoundInConfig as e:
+            self.cfh.save_status(status="DeploymentError", error_msg=str(e))
+            raise e
 
     def remove_application(self) -> None:
         if not self.__check_if_deployed():
@@ -189,7 +201,7 @@ class MainLogic:
         if self.__check_if_deployment_in_progress():
             lg.warning("Deployment is in progress. Please wait until it is finished.")
             return
-        lg.info("Removing smartmonitoring deployment from this system...")
+        lg.info("Removing smartmonitoring_cli deployment from this system...")
         config, manifest = self.cfh.get_installed_stack()
         dock = DockerHandler()
         self.__uninstall_application(manifest, dock)
@@ -205,13 +217,13 @@ class MainLogic:
         if self.__check_if_deployment_in_progress():
             lg.warning("Deployment is already in progress. Please wait until it is finished.")
             return
-        lg.info("Updating smartmonitoring application to this system...")
+        lg.info("Updating smartmonitoring_cli application to this system...")
         lg.info("Retrieving local configuration and update manifest...")
         config, current_manifest = self.cfh.get_installed_stack()
         new_manifest = self.cfh.get_update_manifest(config)
         if not force and not self.__check_version_is_newer(current_manifest.package_version,
                                                            new_manifest.package_version):
-            lg.warning("No newer version of smartmonitoring is available, skipping update...")
+            lg.warning("No newer version of smartmonitoring_cli is available, skipping update...")
             return
         if force or self.__check_version_is_newer(current_manifest.package_version, new_manifest.package_version):
             lg.info(
@@ -223,10 +235,15 @@ class MainLogic:
                              current_manifest: UpdateManifest, new_manifest: UpdateManifest) -> None:
         dock = DockerHandler()
         self.cfh.validate_config_against_manifest(new_config, new_manifest)
+        self.cfh.save_status("Deploying")
         try:
-            dock.check_if_images_exist(new_manifest.containers)
+            dock.pull_images(new_manifest.containers)
+        except ImageDoesNotExist as e:
+            self.cfh.save_status(status="DeploymentError", error_msg=str(e))
+            dock.perform_cleanup()
+            raise
+        try:
             lg.info("Removing old containers...")
-            self.cfh.save_status("Deploying")
             self.__uninstall_application(current_manifest, dock)
             lg.info("Creating new containers...")
             self.__install_application(new_config, new_manifest, dock)
@@ -237,7 +254,7 @@ class MainLogic:
             self.__uninstall_application(new_manifest, dock)
             lg.info("Creating old containers...")
             self.__install_application(current_config, current_manifest, dock)
-            self.cfh.save_status("UpdateError", error_msg=str(e))
+            self.cfh.save_status("DeploymentError", error_msg=str(e))
             lg.info("Performing cleanup...")
             dock.perform_cleanup()
             lg.info("Old containers successfully created...")
@@ -282,7 +299,7 @@ class MainLogic:
             return False
 
     def __check_if_deployed(self) -> bool:
-        lg.debug("Checking if smartmonitoring application is already deployed...")
+        lg.debug("Checking if smartmonitoring_cli application is already deployed...")
         if self.stack_file.exists():
             lg.debug("SmartMonitoring application is deployed on this system...")
             return True
@@ -321,11 +338,11 @@ class MainLogic:
         table.add_row("[bright_cyan]System Hostname", "[bright_cyan]Deployment Status")
         table.add_row(socket.gethostname(), "[green]Deployed" if status == "Deployed" else "[red]Not deployed")
         table.add_row()
-        table.add_row("[bright_cyan]Updater Version", "[bright_cyan]Package Version")
+        table.add_row("[bright_cyan]SmartMonitoring-CLI Version", "[bright_cyan]Package Deployment Version")
         table.add_row(__version__, version)
         table.add_row()
         table.add_row("[bright_cyan]Local IP Address", "[bright_cyan]Update Channel")
-        table.add_row(socket.gethostbyname(socket.gethostname()), channel)
+        table.add_row(hf.get_local_ip_address(), channel)
         table.add_row()
         table.add_row("[bright_cyan]Public IP Address", "[bright_cyan]Proxy Name")
         table.add_row(hf.get_public_ip_address(), proxy_name)
@@ -408,3 +425,23 @@ class MainLogic:
         grid.add_row(self.__generate_container_table(initialize, containers))
         grid.add_row("Press Ctrl+C to exit")
         return grid
+    def __print_logon_banner(self, config: LocalConfig = None, manifest: UpdateManifest = None) -> None:
+        if config is None or manifest is None:
+            status = "Not deployed"
+            version = "-"
+            channel = "-"
+        else:
+            status = "Deployed"
+            version = manifest.package_version
+            channel = config.update_channel
+        print("".center(cs.CLI_WIDTH - 10, "-"))
+        grid = Table.grid(collapse_padding=False)
+        grid.add_column(justify="Left")
+        grid.add_column(justify="Right")
+        grid.add_column(justify="center")
+        grid.add_column(justify="Left")
+        grid.add_column(justify="Right")
+        grid.add_row("Deployment Status: ", status, "        ", "Hostname: ", socket.gethostname())
+        grid.add_row("Package Version: ", version, "        ", "Local IP: ", hf.get_local_ip_address())
+        grid.add_row("Update Channel: ", channel,"         ", "Public IP: ", hf.get_public_ip_address())
+        Console().print(grid)
