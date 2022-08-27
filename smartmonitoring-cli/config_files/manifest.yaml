@@ -9,11 +9,7 @@ versions:
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
-<<<<<<< HEAD:smartmonitoring-cli/config_files/manifest.yaml
             image: ubuntu/mysql:8.0-22.04_edge
-=======
-            image: ubuntu/8.0-22.04_edge
->>>>>>> 452e8985c4088f13924d39b780d22159e15a5363:smartmonitoring/config_files/manifest.yaml
             privileged: false
             config:
               static:
@@ -83,11 +79,7 @@ versions:
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
-<<<<<<< HEAD:smartmonitoring-cli/config_files/manifest.yaml
             image: ubuntu/mysql:8.0-22.04_edge
-=======
-            image: ubuntu/8.0-22.04_edge
->>>>>>> 452e8985c4088f13924d39b780d22159e15a5363:smartmonitoring/config_files/manifest.yaml
             privileged: false
             config:
               static:
