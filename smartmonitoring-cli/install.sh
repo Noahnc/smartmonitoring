@@ -6,14 +6,13 @@
 #                           Description
 #       Bash Script to setup a smartmonitoring_cli proxy server
 #
-#                    Version 1.0 | 19.08.2022
+#                    Version 1.0.1 | 29.08.2022
 
 # Global config variables
 var_python_version="Python3.10"
-var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/0.7.0/smartmonitoring_cli-0.7.0.tar.gz"
+var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/0.7.0/smartmonitoring_cli-0.7.1.tar.gz"
 var_smartmonitoring_update_manifest_url="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
 var_psk_size_bit=256
-var_psk_identity="PSK_KEY"
 var_smartmonitoring_file_name="smartmonitoring.tar.gz"
 var_psk_key=$(openssl rand -hex "$var_psk_size_bit")
 var_smartmonitoring_config_folder="/etc/smartmonitoring"
@@ -22,6 +21,7 @@ var_smartmonitoring_log_folder="/var/log/smartmonitoring"
 var_install_log_file="$var_smartmonitoring_log_folder/install.log"
 var_smartmonitoring_config_file_path="$var_smartmonitoring_config_folder/smartmonitoring_config.yaml"
 var_psk_file_path="$var_smartmonitoring_config_folder/psk_key.txt"
+var_app_name="SmartMonitoring-CLI"
 
 # Catch shell termination
 trap ctrl_c INT
@@ -34,9 +34,9 @@ function ctrl_c() {
 
 function error() {
     # Delete downloaded smartmonitoring_cli sdist file
-    DeleteFile "$var_smartmonitoring_file_name"
+    delete_file "$var_smartmonitoring_file_name"
     echo -e "\e[31m
-A critical error occurred during installation of SmartMonitoring.
+A critical error occurred during installation of $var_app_name.
 Please check the following log file for more information:\e[39m
 Logfile: $var_install_log_file"
     exit 1
@@ -99,7 +99,7 @@ function perform_operation() {
 function create_login_banner() {
     # Delete some not needed default banners from ubuntu
     delete_file "/etc/motd"
-    delete_file "/etc/update-motd.d/00-smartmonitoring"
+    delete_file "/etc/update-motd.d/00-smartmonitoring-cli"
     delete_file "/etc/update-motd.d/10-uname"
     delete_file "/etc/update-motd.d/20-hints"
     delete_file "/etc/update-motd.d/50-banner"
@@ -174,17 +174,12 @@ ________________________________________________________________________________
 function print_finish_text() {
     print_logo
     echo -e " \e[34m
-Installation of SmartMonitoring successfully completed.
+Your SmartMonitoring Proxy has been successfully deployed.
 Please create this proxy in the Zabbix WebPortal with the following information:
 
 Proxy Name:\e[33m $var_proxy_name\e[34m
-<<<<<<< HEAD:smartmonitoring-cli/install.sh
-PSK Identity:\e[33m $var_psk_identity\e[34m
-$var_psk_size_bit bit PSK Key:\e[33m
-=======
 PSK Identity:\e[33m $var_proxy_name\e[34m
 256bit PSK Key:\e[33m
->>>>>>> 452e8985c4088f13924d39b780d22159e15a5363:smartmonitoring/install.sh
 $var_psk_key\e[34m
 
 Also create the following host object in Zabbix:
@@ -199,11 +194,11 @@ Interface Agent:\e[33m zabbix-agent2-container\e[34m
 
 # creates a hourly running cron job
 function create_cron_job() {
-    cat >/etc/cron.hourly/smartmonitoring-cli <<EOF
+    cat >/etc/cron.hourly/smartmonitoring<<EOF
 #!/bin/bash
 /usr/local/bin/smartmonitoring update -s
 EOF
-    chmod +x /etc/cron.hourly/smartmonitoring-cli
+    chmod +x /etc/cron.hourly/smartmonitoring
 }
 
 # downloads and installs smartmonitoring_cli sdist package
@@ -288,9 +283,9 @@ if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
     perform_operation "install_program docker.io" "Installing Docker Engine..."
     perform_operation "install_program $var_python_version" "Installing $var_python_version..."
     perform_operation "install_program python3-pip" "Installing pip..."
-    perform_operation "install_smartmonitoring" "Installing SmartMonitoring Updater package..."
+    perform_operation "install_smartmonitoring" "Installing $var_app_name package..."
 
-    perform_operation "save_smartmonitoring_files $var_smartmonitoring_update_manifest_url $var_proxy_name $var_psk_file_path" "Saving SmartMonitoring Files..."
+    perform_operation "save_smartmonitoring_files $var_smartmonitoring_update_manifest_url $var_proxy_name $var_psk_file_path" "Saving $var_app_name Files..."
     perform_operation "create_cron_job" "Create Cron Job for auto-update..."
     perform_operation "create_login_banner" "Create Login Banner..."
     perform_operation "smartmonitoring deploy -s -v" "Deploying SmartMonitoring..."
@@ -300,10 +295,10 @@ else
   # Ask if smartmonitoring_cli-cli should be updated
     var_content_valid="false"
     while [[ $var_content_valid = "false" ]]; do
-        echo "SmartMonitoring is already installed on this system."
+        echo "$var_app_name is already installed on this system."
         read -r -p "Do you want to update? (y/n): " var_choice
         if [[ $var_choice == "n" ]]; then
-            echo "Update of SmartMonitoring canceled!"
+            echo "Update of $var_app_name canceled!"
             exit 0
         elif [[ $var_choice == "y" ]]; then
             var_content_valid="true"
@@ -316,7 +311,7 @@ else
     echo "################################## Perform Update ##################################"
     perform_operation "smartmonitoring undeploy -s -v" "Remove current SmartMonitoring Deployment..."
     perform_operation "install_program $var_python_version" "Updating Python..."
-    perform_operation "install_smartmonitoring" "Installing new Version of SmartMonitoring Updater..."
+    perform_operation "install_smartmonitoring" "Installing new Version of $var_app_name..."
     perform_operation "create_login_banner" "Updating Login Banner..."
     perform_operation "smartmonitoring deploy -s -v" "Deploy SmartMonitoring..."
     echo "Update finished!"

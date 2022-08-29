@@ -38,7 +38,7 @@ versions:
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
-            image: noahnc/smartmonitoring_cli-proxy:6.0-01
+            image: noahnc/smartmonitoring-proxy:6.0-01
             privileged: false
             files:
               - name: psk_encryption_key
@@ -108,7 +108,7 @@ versions:
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
-            image: noahnc/smartmonitoring_cli-proxy:6.0-01
+            image: noahnc/smartmonitoring-proxy:6.0-01
             privileged: false
             files:
               - name: psk_encryption_key

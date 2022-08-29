@@ -8,6 +8,7 @@ LOCAL_CONF_FILE_NAME = 'smartmonitoring_config.yaml'
 DEPLOYED_STACK_FILE_NAME = 'installed_stack.json'
 
 CLI_LOGO_TEXT = "SmartMonitoring by btc."
+APP_NAME = "SmartMonitoring-CLI"
 
 
 class ConfigDefaults:

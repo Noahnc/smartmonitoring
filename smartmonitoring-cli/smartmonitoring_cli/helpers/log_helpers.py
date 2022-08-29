@@ -69,7 +69,7 @@ def log_start(action: str):
     lg.info("#")
     lg.info(f'# Action: {action}')
     lg.info(f'# Hostname: {socket.gethostname()}')
-    lg.info(f'# Updater Version: {__version__}')
+    lg.info(f'# {cs.APP_NAME}: {__version__}')
     lg.info("#")
 
 

@@ -267,6 +267,6 @@ class DockerHandler:
                 privileged=container.privileged,
                 detach=True)
             self.__connect_container_to_inter_network(container)
-        except APIError or ImageDoesNotExist as e:
+        except (APIError, ImageDoesNotExist) as e:
             lg.error(f'Error creating container {container.name}')
             raise ContainerCreateError(e) from e

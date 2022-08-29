@@ -128,9 +128,9 @@ class MainLogic:
             lg.info("Validating new local configuration...")
             new_config = self.cfh.get_local_config()
             self.cfh.validate_config_against_manifest(new_config, manifest)
-        except ConfigError or ValueNotFoundInConfig as e:
+        except (ConfigError, ValueNotFoundInConfig) as e:
             lg.error(f'Config file is invalid: {e}')
-            lg.info("You can validate the config file by running 'smartmonitoring_cli validate-config'")
+            lg.info("You can validate the config file by running 'smartmonitoring validate-config'")
             return
         lg.info("Config file is valid")
         identical, changes = self.cfh.compare_local_config(current_config, new_config)
@@ -164,10 +164,10 @@ class MainLogic:
             lg.warning("SmartMonitoring is not deployed, skipping restart...")
             return
         if self.__check_if_deployment_in_progress():
-            lg.warning("Deployment is in progress. Please wait until it is finished.")
+            lg.warning("Deployment is in progress, please wait until it is finished.")
             return
 
-        lg.info("Restarting smartmonitoring_cli application...")
+        lg.info("Restarting smartmonitoring deployment...")
         config, manifest = self.cfh.get_installed_stack()
         dock = DockerHandler()
         dock.restart_containers(manifest.containers)
@@ -177,7 +177,7 @@ class MainLogic:
         if self.__check_if_deployed():
             lg.warning("SmartMonitoring is already deployed, skipping deployment...")
             return
-        lg.info("Deploying smartmonitoring_cli application to this system...")
+        lg.info("Deploying smartmonitoring application to this system...")
         lg.info("Retrieving local configuration and update manifest...")
         config, manifest = self.cfh.get_config_and_manifest()
         dock = DockerHandler()
@@ -190,7 +190,7 @@ class MainLogic:
             self.cfh.save_installed_stack(config, manifest)
             self.cfh.save_status("Deployed", upd_channel=config.update_channel, pkg_version=manifest.package_version)
             lg.info("SmartMonitoring application successfully deployed...")
-        except ContainerCreateError or ImageDoesNotExist or ValueNotFoundInConfig as e:
+        except (ContainerCreateError, ImageDoesNotExist, ValueNotFoundInConfig) as e:
             self.cfh.save_status(status="DeploymentError", error_msg=str(e))
             raise e
 
@@ -201,14 +201,14 @@ class MainLogic:
         if self.__check_if_deployment_in_progress():
             lg.warning("Deployment is in progress. Please wait until it is finished.")
             return
-        lg.info("Removing smartmonitoring_cli deployment from this system...")
+        lg.info("Removing smartmonitoring deployment from this system...")
         config, manifest = self.cfh.get_installed_stack()
         dock = DockerHandler()
         self.__uninstall_application(manifest, dock)
         dock.remove_inter_network()
         dock.perform_cleanup()
         self.cfh.remove_var_data_files()
-        lg.info("SmartMonitoring application successfully removed...")
+        lg.info("SmartMonitoring application successfully removed")
 
     def update_application(self, force: bool) -> None:
         if not self.__check_if_deployed():
@@ -217,19 +217,18 @@ class MainLogic:
         if self.__check_if_deployment_in_progress():
             lg.warning("Deployment is already in progress. Please wait until it is finished.")
             return
-        lg.info("Updating smartmonitoring_cli application to this system...")
         lg.info("Retrieving local configuration and update manifest...")
         config, current_manifest = self.cfh.get_installed_stack()
         new_manifest = self.cfh.get_update_manifest(config)
         if not force and not self.__check_version_is_newer(current_manifest.package_version,
                                                            new_manifest.package_version):
-            lg.warning("No newer version of smartmonitoring_cli is available, skipping update...")
+            lg.warning("No newer SmartMonitoring Deployment is available, skipping update...")
             return
         if force or self.__check_version_is_newer(current_manifest.package_version, new_manifest.package_version):
             lg.info(
                 f"Update SmartMonitoring from {current_manifest.package_version} to {new_manifest.package_version}...")
             self.__replace_deployment(config, config, current_manifest, new_manifest)
-            lg.info(f"SmartMonitoring successfully updated to version {new_manifest.package_version}...")
+            lg.info(f"SmartMonitoring successfully updated to version {new_manifest.package_version}")
 
     def __replace_deployment(self, current_config: LocalConfig, new_config: LocalConfig,
                              current_manifest: UpdateManifest, new_manifest: UpdateManifest) -> None:
@@ -264,7 +263,7 @@ class MainLogic:
                                  pkg_version=new_manifest.package_version)
             lg.info("Performing cleanup...")
             dock.perform_cleanup()
-            lg.info("New containers successfully deployed...")
+            lg.info("New containers successfully deployed")
 
     def __install_application(self, config: LocalConfig, manifest: UpdateManifest, dock: DockerHandler) -> None:
         env_secrets = self.cfh.generate_dynamic_secrets(manifest.dynamic_secrets)
@@ -299,7 +298,7 @@ class MainLogic:
             return False
 
     def __check_if_deployed(self) -> bool:
-        lg.debug("Checking if smartmonitoring_cli application is already deployed...")
+        lg.debug("Checking if smartmonitoring application is already deployed...")
         if self.stack_file.exists():
             lg.debug("SmartMonitoring application is deployed on this system...")
             return True

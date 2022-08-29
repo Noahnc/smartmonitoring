@@ -55,13 +55,11 @@ class DataHandler:
         lg.debug(f'Downloading yaml from: {url} to: {file}')
         try:
             r = requests.get(url)
+            r.raise_for_status()
             with open(file, 'wb') as f:
                 f.write(r.content)
             lg.debug(f'Completed download of yaml from: {url} to: {file}')
             return self.__load_yaml_from_file(Path(file))
-        except ConnectionError or HTTPError or Timeout as e:
-            lg.error(f'Error downloading yaml from: {url} to: {file}, error message: {e}')
-            raise
         finally:
             os.close(tf)
             hf.delete_file_if_exists(file)
@@ -71,10 +69,10 @@ class DataHandler:
         try:
             manifest = self.__load_yaml_from_web(local_config.update_manifest_url)
             stack = manifest["versions"][local_config.update_channel]
-        except ConnectionError or HTTPError or Timeout as e:
-            raise ManifestError(f'Error downloading manifest from: {local_config.update_manifest_url}: {e}') from e
+        except (ConnectionError, HTTPError, Timeout) as e:
+            raise ManifestError(f'Error downloading manifest: {e}') from e
         except yaml.YAMLError as e:
-            raise ManifestError(f'Error parsing manifest yaml from {local_config.update_manifest_url}: {e}') from e
+            raise ManifestError(f'Error parsing manifest yaml: {e}') from e
         except KeyError as e:
             raise ManifestError(f'Update channel: {local_config.update_channel} not found in update manifest') from e
         return self.process_update_manifest(stack)
