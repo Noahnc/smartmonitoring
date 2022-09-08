@@ -5,7 +5,7 @@ import sys
 import click
 from rich.console import Console
 
-import smartmonitoring_cli.helpers.log_helpers as lh
+import smartmonitoring_cli.helpers.log_helper as lh
 from smartmonitoring_cli.main_logic import MainLogic
 
 
@@ -29,7 +29,7 @@ def restart(silent: bool, verbose: bool):
         lh.log_start("Restarting all containers of deployment...")
         main_logic.restart_application()
     except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected. Exiting...")
+        lg.warning("KeyboardInterrupt detected, exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if verbose and not silent:
@@ -47,14 +47,14 @@ def restart(silent: bool, verbose: bool):
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def validate_config(verbose: bool):
     """Validates the local config for errors in the syntax."""
-    main_logic = MainLogic()
-    if verbose:
-        lh.add_console_logger(debug=verbose)
-        lh.log_start("Validating config and manifest...")
     try:
+        main_logic = MainLogic()
+        if verbose:
+            lh.add_console_logger(debug=verbose)
+            lh.log_start("Validating config and manifest...")
         main_logic.check_configurations(verbose)
     except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected. Exiting...")
+        lg.warning("KeyboardInterrupt detected, exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if verbose:
@@ -71,14 +71,14 @@ def validate_config(verbose: bool):
 @click.option("-s", "--silent", is_flag=True, default=False,
               help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 def apply_config(verbose: bool, silent: bool):
-    """Validates the local configuration file and applies it if valid."""
+    """Validates the local config file and applies it if valid."""
     try:
         main_logic = MainLogic()
         main_logic.setup_logging(verbose, False)
         lh.log_start("Applying local configuration file")
         main_logic.validate_and_apply_config(silent)
     except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected. Exiting...")
+        lg.warning("KeyboardInterrupt detected, exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if verbose and not silent:
@@ -97,14 +97,14 @@ def apply_config(verbose: bool, silent: bool):
               help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def deploy(silent: bool, verbose: bool):
-    """Deploys the SmartMonitoring Proxy Application on this System."""
+    """Deploys SmartMonitoring on this System."""
     try:
         main_logic = MainLogic()
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Deploying SmartMonitoring Proxy Application")
         main_logic.deploy_application()
     except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected. Exiting...")
+        lg.warning("KeyboardInterrupt detected, exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if verbose and not silent:
@@ -123,14 +123,14 @@ def deploy(silent: bool, verbose: bool):
               help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def undeploy(silent: bool, verbose: bool):
-    """Removes the SmartMonitoring Application from this system."""
+    """Removes the SmartMonitoring Deployment from this system."""
     try:
         main_logic = MainLogic()
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Remove SmartMonitoring Proxy Application")
         main_logic.remove_application()
     except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected. Exiting...")
+        lg.warning("KeyboardInterrupt detected, exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if verbose and not silent:
@@ -151,14 +151,14 @@ def undeploy(silent: bool, verbose: bool):
 @click.option("-f", "--force", is_flag=True, default=False,
               help="Applies the remote manifest even if it is not newer than the local one")
 def update(silent: bool, verbose: bool, force: bool):
-    """Checks if a newer Version is available and updates the Deployment if so."""
+    """Checks if a newer SmartMonitoring Deployment is available and updates it if so."""
     try:
         main_logic = MainLogic()
         main_logic.setup_logging(verbose, silent)
         lh.log_start("Updating SmartMonitoring Application")
         main_logic.update_application(force)
     except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected. Exiting...")
+        lg.warning("KeyboardInterrupt detected, exiting...")
     except Exception as e:
         lg.critical(f'Critical Error occurred: {e}')
         if verbose and not silent:
@@ -177,7 +177,7 @@ def update(silent: bool, verbose: bool, force: bool):
 @click.option("--disable-refresh", is_flag=True, default=False, help="Disables automatic refresh of the Dashboard")
 @click.option("--banner-version", is_flag=True, default=False, help="Prints reduced information for the shell login banner")
 def status(verbose: bool, disable_refresh: bool, banner_version: bool):
-    """Show a status dashboard with important metrics."""
+    """Shows a status dashboard with important metrics."""
     try:
         main_logic = MainLogic()
         lh.add_console_logger(debug=verbose, level="CRITICAL")

@@ -10,7 +10,7 @@
 
 # Global config variables
 var_python_version="Python3.10"
-var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/0.7.0/smartmonitoring_cli-0.7.1.tar.gz"
+var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/0.7.1/smartmonitoring_cli-0.7.1.tar.gz"
 var_smartmonitoring_update_manifest_url="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
 var_psk_size_bit=256
 var_smartmonitoring_file_name="smartmonitoring.tar.gz"

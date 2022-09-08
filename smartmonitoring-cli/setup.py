@@ -3,7 +3,7 @@ from smartmonitoring_cli import __version__
 
 setup(
     name='smartmonitoring_cli',
-    description='A Tool to deploy and update SmartMonitoring Proxies',
+    description='A Tool to deploy and update SmartMonitoring Deployments',
     version=__version__,
     packages=find_packages(
         where='.',

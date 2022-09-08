@@ -23,6 +23,7 @@ def create_folder_if_not_exists(folder: os.path) -> None:
         except Exception as e:
             raise e
 
+
 def get_local_ip_address() -> str:
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -31,6 +32,7 @@ def get_local_ip_address() -> str:
     except Exception as e:
         lg.debug("Error getting local ip address: " + str(e))
         return "unknown"
+
 
 def get_public_ip_address() -> str:
     import requests
