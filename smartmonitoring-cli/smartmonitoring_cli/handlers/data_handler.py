@@ -72,7 +72,7 @@ class DataHandler:
         except (ConnectionError, HTTPError, Timeout) as e:
             raise ManifestError(f'Error downloading manifest: {e}') from e
         except yaml.YAMLError as e:
-            raise ManifestError(f'Error parsing manifest yaml: {e}') from e
+            raise ManifestError(f'Error parsing yaml of manifest: {e}') from e
         except KeyError as e:
             raise ManifestError(f'Update channel: {local_config.update_channel} not found in update manifest') from e
         return self.process_update_manifest(stack)
@@ -86,6 +86,8 @@ class DataHandler:
             raise ConfigError(f'Error loading local config file, message: {e}') from e
         except KeyError as e:
             raise ConfigError(f'No Key "SmartMonitoring_Proxy" found in local config file: {self.config_file}') from e
+        except yaml.YAMLError as e:
+            raise ConfigError(f'Error parsing yaml of local config: {e}') from e
         self.__set_default_values_in_local_config(smartmonitoring_config)
         return self.process_local_config(smartmonitoring_config)
 
@@ -103,12 +105,12 @@ class DataHandler:
         lg.debug('Update manifest dict successfully processed to object')
         return manifest
 
-    def validate_config_against_manifest(self, config: LocalConfig, manifest: UpdateManifest) -> None:
+    def validate_config_against_manifest(self, config: LocalConfig, manifest: UpdateManifest, check_files: bool = True) -> None:
         lg.debug("Validating local config against update manifest")
         env_secrets = self.generate_dynamic_secrets(manifest.dynamic_secrets)
         for container in manifest.containers:
             self.compose_env_variables(config, container, env_secrets)
-            if container.files is not None:
+            if container.files is not None and check_files:
                 self.compose_mapped_files(container, config)
 
     def process_local_config(self, local_config: dict) -> LocalConfig:
@@ -160,6 +162,8 @@ class DataHandler:
             if value not in container_local_config:
                 raise ValueNotFoundInConfig(
                     f'Dynamic setting {value} not found in local config for container: {container.name}')
+            if key in env_variables:
+                raise ManifestError(f'Dynamic setting {key} already exists in  settings of container: {container.name}')
             val = container_local_config[value]
             env_variables[key] = val
         return env_variables

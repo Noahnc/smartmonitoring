@@ -10,7 +10,7 @@ from smartmonitoring_cli import __version__
 start_time = 1.0
 
 
-def setup_file_logger(file: os.path, level: str = "DEBUG", size: int = 50, count: int = 5) -> None:
+def setup_file_logger(file: os.path, level: str = "DEBUG", size: int = 1000, count: int = 10) -> None:
     log_file_size = size * 1024 * 1024
     main_logger = lg.getLogger()
     main_logger.setLevel(lg.getLevelName("DEBUG"))

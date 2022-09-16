@@ -82,7 +82,8 @@ class MainLogic:
         manifest_message = "Manifest is valid"
 
         try:
-            self.cfh.get_config_and_manifest()
+            config, manifest = self.cfh.get_config_and_manifest()
+            self.cfh.validate_config_against_manifest(config, manifest, check_files=False)
             lg.info("Configuration and manifest are valid!")
         except ConfigError as e:
             config_valid = False
@@ -223,9 +224,11 @@ class MainLogic:
         if self.__check_if_deployment_in_progress():
             lg.warning("Deployment is already in progress. Please wait until it is finished.")
             return
+
         lg.info("Retrieving local configuration and update manifest...")
         config, current_manifest = self.cfh.get_installed_stack()
         new_manifest = self.cfh.get_update_manifest(config)
+
         if not force and not self.__check_version_is_newer(current_manifest.package_version,
                                                            new_manifest.package_version):
             lg.warning("No newer SmartMonitoring Deployment is available, skipping update...")
