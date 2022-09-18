@@ -1,0 +1,186 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-09-18T12:28:28Z'
+  groups:
+    -
+      uuid: e105a5cbece243c58ce62335fc77101b
+      name: Device_Zabbix-proxys
+  templates:
+    -
+      uuid: ca2b23c83b7e4ef393f1afd85ec6bfd6
+      template: 'btc SmartMonitoring Proxy Metadata'
+      name: 'btc SmartMonitoring Proxy Metadata'
+      groups:
+        -
+          name: Device_Zabbix-proxys
+      items:
+        -
+          uuid: 3b7a665b3b46446ab84e725078b73953
+          name: 'SmartMonitoring Last Deployment Update'
+          type: DEPENDENT
+          key: smartmonitoring.proxy.last_deployment
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.last_update
+          master_item:
+            key: 'system.run[tail /var/status.json]'
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+        -
+          uuid: 54f106bed2024352ac11b0589caa066d
+          name: 'SmartMonitoring Package-Version'
+          type: DEPENDENT
+          key: smartmonitoring.proxy.package_version
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.package_version
+          master_item:
+            key: 'system.run[tail /var/status.json]'
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+        -
+          uuid: fc903e7769e94d6e94de30ea57764393
+          name: 'SmartMonitoring Status'
+          type: DEPENDENT
+          key: smartmonitoring.proxy.status
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.status
+          master_item:
+            key: 'system.run[tail /var/status.json]'
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+        -
+          uuid: dbcd6f04f39f4e749300808640bc0b57
+          name: 'SmartMonitoring Update-Channel'
+          type: DEPENDENT
+          key: smartmonitoring.proxy.update_channel
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.update_channel
+          master_item:
+            key: 'system.run[tail /var/status.json]'
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+        -
+          uuid: fb694121fddb49daa8e547a1b3f8a61f
+          name: 'SmartMonitoring Update Error Msg'
+          type: DEPENDENT
+          key: smartmonitoring.proxy.update_error_msg
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.error_msg
+          master_item:
+            key: 'system.run[tail /var/status.json]'
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+        -
+          uuid: 6024ae9af9bc4213b7928e373f09e17d
+          name: 'SmartMonitoring Proxy Version UpToDate'
+          type: DEPENDENT
+          key: smartmonitoring.proxy.uptodate
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  var c= [];
+                  var m= [];
+                  c=value.split('.');
+                  m='{$SMARTMONITORING_PACKAGE_VERSION}'.split('.');
+                  if (c[0] > m[0]) return true;
+                  if (c[0] == m[0] && c[1] > m[1]) return true;
+                  if (c[0] == m[0] && c[1] == m[1] && c[2] >= m[2]) return true;
+                  return false;
+          master_item:
+            key: smartmonitoring.proxy.package_version
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+          triggers:
+            -
+              uuid: aceba8f4bf214bd792088f9b8ad61d7e
+              expression: 'last(/btc SmartMonitoring Proxy Metadata/smartmonitoring.proxy.uptodate,#1)="false"'
+              name: 'SmartMonitoring Proxy is not UpToDate'
+              opdata: '{ITEM.LASTVALUE}'
+              priority: WARNING
+              description: 'This trigger is executed, when the deployed package version on a smartmonitoring proxy is older than the global specified version in the macros.'
+              manual_close: 'YES'
+        -
+          uuid: 423f2709e9504d1f91d26b7aef26179c
+          name: 'SmartMonitoring-CLI Version'
+          type: DEPENDENT
+          key: smartmonitoring.proxy.version
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.smartmonitoring_version
+          master_item:
+            key: 'system.run[tail /var/status.json]'
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+        -
+          uuid: af0a3308475a4ca2a4cc1f47b3fd0363
+          name: metadata_json
+          key: 'system.run[tail /var/status.json]'
+          delay: 5m
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Application
+              value: SmartMonitoring_Proxy
+  triggers:
+    -
+      uuid: 96bfb0929b044729b821142c1f46b1c5
+      expression: 'last(/btc SmartMonitoring Proxy Metadata/smartmonitoring.proxy.update_error_msg,#1)<>"-" or last(/btc SmartMonitoring Proxy Metadata/smartmonitoring.proxy.status,#1)="UpdateError"'
+      name: 'SmartMonitoring Update Error'
+      opdata: '{ITEM.LASTVALUE}'
+      priority: WARNING
+      description: 'This trigger is executed, when a smartmonitoring proxy update fails and a fallback to the previous version is performed.'
+      manual_close: 'YES'
