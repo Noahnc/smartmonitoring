@@ -13,11 +13,8 @@ USER root
 WORKDIR /usr/lib/zabbix/externalscripts/
 COPY src/external_scripts/ ./
 
-
-
 RUN find /usr/lib/zabbix/externalscripts/ -type f -iname "*.sh" -exec chmod +x {} \;
 RUN find /usr/lib/zabbix/externalscripts/ -type f -iname "*.py" -exec chmod +x {} \;
-
 
 # install required packages
 RUN apt-get update

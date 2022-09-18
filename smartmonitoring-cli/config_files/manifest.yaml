@@ -2,7 +2,7 @@
 # There are two different release channels that can be used (TESTING und STABLE)
 versions:
     STABLE:
-        package_version: "1.0.5"
+        package_version: "1.0.7"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
@@ -38,7 +38,7 @@ versions:
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
-            image: noahnc/smartmonitoring-proxy:6.0-01
+            image: noahnc/smartmonitoring-proxy:6.0-03
             privileged: false
             files:
               - name: psk_encryption_key
@@ -72,7 +72,7 @@ versions:
                 MYSQL_PASSWORD: mysql_password
 
     TESTING:
-        package_version: "1.0.5"
+        package_version: "1.0.7"
         dynamic_secrets:
           - mysql_password
           - mysql_root_pw
@@ -108,7 +108,7 @@ versions:
 
           - name: zabbix_proxy_container
             hostname: zabbix-proxy-container
-            image: noahnc/smartmonitoring-proxy:6.0-01
+            image: noahnc/smartmonitoring-proxy:6.0-03
             privileged: false
             files:
               - name: psk_encryption_key

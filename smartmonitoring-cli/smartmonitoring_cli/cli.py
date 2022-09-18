@@ -13,7 +13,8 @@ from smartmonitoring_cli.main_logic import MainLogic
 def main():
     if sys.platform.startswith("linux"):
         if os.geteuid() != 0:
-            print("You need to have root privileges to run this script.")
+            print("You need to have root privileges to run this application.")
+            print("Please try again, this time using 'sudo'.")
             sys.exit(1)
 
 
@@ -23,47 +24,16 @@ def main():
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def restart(silent: bool, verbose: bool):
     """Restarts all Containers of the current deployment."""
-    try:
-        main_logic = MainLogic()
-        main_logic.setup_logging(verbose, silent)
-        lh.log_start("Restarting all containers of deployment...")
-        main_logic.restart_application()
-    except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected, exiting...")
-    except Exception as e:
-        lg.critical(f'Critical Error occurred: {e}')
-        if verbose and not silent:
-            Console().print_exception(show_locals=True)
-        elif verbose and silent:
-            lg.debug(f'Stack trace: ', exc_info=True)
-        else:
-            lg.info('Run the application with the --verbose flag to get more information.')
-        exit_with_error(1)
-    finally:
-        lh.log_finish()
+    main_logic = prepare_cli("Restarting all containers of deployment...", verbose, silent)
+    command_executer(verbose, silent, main_logic.restart_application)
 
 
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def validate_config(verbose: bool):
     """Validates the local config for errors in the syntax."""
-    try:
-        main_logic = MainLogic()
-        if verbose:
-            lh.add_console_logger(debug=verbose)
-            lh.log_start("Validating config and manifest...")
-        main_logic.check_configurations(verbose)
-    except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected, exiting...")
-    except Exception as e:
-        lg.critical(f'Critical Error occurred: {e}')
-        if verbose:
-            Console().print_exception(show_locals=True)
-        else:
-            lg.info('Run the application with the --verbose flag to get more information.')
-        exit_with_error(1)
-    finally:
-        if verbose: lh.log_finish()
+    main_logic = prepare_cli("Applying new local config", verbose, False, True)
+    command_executer(verbose, False, main_logic.check_configurations, verbose)
 
 
 @main.command()
@@ -72,24 +42,8 @@ def validate_config(verbose: bool):
               help="Specify if you want to run the application in silent mode, which writes all output to the log file")
 def apply_config(verbose: bool, silent: bool):
     """Validates the local config file and applies it if valid."""
-    try:
-        main_logic = MainLogic()
-        main_logic.setup_logging(verbose, False)
-        lh.log_start("Applying local configuration file")
-        main_logic.validate_and_apply_config(silent)
-    except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected, exiting...")
-    except Exception as e:
-        lg.critical(f'Critical Error occurred: {e}')
-        if verbose and not silent:
-            Console().print_exception(show_locals=True)
-        elif verbose and silent:
-            lg.debug(f'Stack trace: ', exc_info=True)
-        else:
-            lg.info('Run the application with the --verbose flag to get more information.')
-        exit_with_error(1)
-    finally:
-        lh.log_finish()
+    main_logic = prepare_cli("Applying new local config", verbose, silent)
+    command_executer(verbose, silent, main_logic.validate_and_apply_config, silent)
 
 
 @main.command()
@@ -98,24 +52,8 @@ def apply_config(verbose: bool, silent: bool):
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def deploy(silent: bool, verbose: bool):
     """Deploys SmartMonitoring on this System."""
-    try:
-        main_logic = MainLogic()
-        main_logic.setup_logging(verbose, silent)
-        lh.log_start("Deploying SmartMonitoring Proxy Application")
-        main_logic.deploy_application()
-    except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected, exiting...")
-    except Exception as e:
-        lg.critical(f'Critical Error occurred: {e}')
-        if verbose and not silent:
-            Console().print_exception(show_locals=True)
-        elif verbose and silent:
-            lg.debug(f'Stack trace: ', exc_info=True)
-        else:
-            lg.info('Run the application with the --verbose flag to get more information.')
-        exit_with_error(1)
-    finally:
-        lh.log_finish()
+    main_logic = prepare_cli("Deploying SmartMonitoring", verbose, silent)
+    command_executer(verbose, silent, main_logic.deploy_application)
 
 
 @main.command()
@@ -124,24 +62,8 @@ def deploy(silent: bool, verbose: bool):
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def undeploy(silent: bool, verbose: bool):
     """Removes the SmartMonitoring Deployment from this system."""
-    try:
-        main_logic = MainLogic()
-        main_logic.setup_logging(verbose, silent)
-        lh.log_start("Remove SmartMonitoring Proxy Application")
-        main_logic.remove_application()
-    except KeyboardInterrupt:
-        lg.warning("KeyboardInterrupt detected, exiting...")
-    except Exception as e:
-        lg.critical(f'Critical Error occurred: {e}')
-        if verbose and not silent:
-            Console().print_exception(show_locals=True)
-        elif verbose and silent:
-            lg.debug(f'Stack trace: ', exc_info=True)
-        else:
-            lg.info('Run the application with the --verbose flag to get more information.')
-        exit_with_error(1)
-    finally:
-        lh.log_finish()
+    main_logic = prepare_cli("Removing SmartMonitoring deployment", verbose, silent)
+    command_executer(verbose, silent, main_logic.remove_application)
 
 
 @main.command()
@@ -152,11 +74,37 @@ def undeploy(silent: bool, verbose: bool):
               help="Applies the remote manifest even if it is not newer than the local one")
 def update(silent: bool, verbose: bool, force: bool):
     """Checks if a newer SmartMonitoring Deployment is available and updates it if so."""
+    main_logic = prepare_cli("Updating SmartMonitoring deployment", verbose, silent)
+    command_executer(verbose, silent, main_logic.update_application, force)
+
+
+@main.command()
+@click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
+@click.option("--disable-refresh", is_flag=True, default=False, help="Disables automatic refresh of the Dashboard")
+@click.option("--banner-version", is_flag=True, default=False,
+              help="Prints reduced information for the shell login banner")
+def status(verbose: bool, disable_refresh: bool, banner_version: bool):
+    """Shows a status dashboard with important metrics."""
+    if verbose: disable_refresh = True
+    main_logic = prepare_cli("Showing status dashboard", verbose, False, only_critical=True)
+    command_executer(verbose, False, main_logic.print_status, disable_refresh, banner_version)
+
+
+def exit_with_error(code: int) -> None:
+    lg.critical(f'Exiting with error code {code} because of an critical error.')
+    exit(code)
+
+
+def prepare_cli(action: str, verbose: bool, silent: bool, only_critical: bool = False) -> MainLogic:
+    main_logic = MainLogic()
+    command_executer(verbose, silent, main_logic.setup_logging, verbose, silent, only_critical)
+    lh.log_start(action)
+    return main_logic
+
+
+def command_executer(verbose: bool, silent: bool, function, *args) -> None:
     try:
-        main_logic = MainLogic()
-        main_logic.setup_logging(verbose, silent)
-        lh.log_start("Updating SmartMonitoring Application")
-        main_logic.update_application(force)
+        function(*args)
     except KeyboardInterrupt:
         lg.warning("KeyboardInterrupt detected, exiting...")
     except Exception as e:
@@ -166,34 +114,7 @@ def update(silent: bool, verbose: bool, force: bool):
         elif verbose and silent:
             lg.debug(f'Stack trace: ', exc_info=True)
         else:
-            lg.info('Run the application with the --verbose flag to get more information.')
+            lg.info('Run the command with the --verbose flag to get more information.')
         exit_with_error(1)
     finally:
         lh.log_finish()
-
-
-@main.command()
-@click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
-@click.option("--disable-refresh", is_flag=True, default=False, help="Disables automatic refresh of the Dashboard")
-@click.option("--banner-version", is_flag=True, default=False, help="Prints reduced information for the shell login banner")
-def status(verbose: bool, disable_refresh: bool, banner_version: bool):
-    """Shows a status dashboard with important metrics."""
-    try:
-        main_logic = MainLogic()
-        lh.add_console_logger(debug=verbose, level="CRITICAL")
-        lh.log_start("Read and print status of Application")
-        if verbose: disable_refresh = True
-        main_logic.print_status(disable_refresh, banner_version)
-    except Exception as e:
-        lg.critical(f'Critical Error occurred: {e}')
-        if verbose:
-            Console().print_exception(show_locals=True)
-        else:
-            lg.info('Run the application with the --verbose flag to get more information.')
-        exit_with_error(1)
-    finally:
-        lh.log_finish()
-
-def exit_with_error(code: int) -> None:
-    lg.critical(f'Exiting with error code {code} because of an critical error.')
-    exit(code)

@@ -50,10 +50,13 @@ class MainLogic:
         self.cfh = DataHandler(self.config_file, self.stack_file, self.status_file)
         pass
 
-    def setup_logging(self, debug: bool, silent: bool) -> None:
+    def setup_logging(self, debug: bool, silent: bool, only_critical: bool = False) -> None:
         log_file_path = os.path.join(self.smartmonitoring_log_dir, cs.LOG_FILE_NAME)
-        if not silent:
+        if not silent and not only_critical:
             lh.add_console_logger(debug)
+            return
+        if not silent and only_critical:
+            lh.add_console_logger(debug, level="CRITICAL")
             return
         if debug:
             lh.setup_file_logger(file=log_file_path)
@@ -73,7 +76,6 @@ class MainLogic:
             lh.update_file_logger(level="DEBUG", size=config.log_file_size_mb, count=config.log_file_count)
         else:
             lh.update_file_logger(size=config.log_file_size_mb, count=config.log_file_count)
-
 
     def check_configurations(self, debug: bool) -> None:
         config_valid = True
@@ -122,13 +124,7 @@ class MainLogic:
         Console().print(table)
 
     def validate_and_apply_config(self, silent: bool) -> None:
-        if not self.__check_if_deployed():
-            lg.warning(
-                "SmartMonitoring is not deployed on this system. Before you can apply a new configuration, "
-                "you have to deploy the application...")
-            return
-        if self.__check_if_deployment_in_progress():
-            lg.warning("Deployment is already in progress. Please wait until it is finished.")
+        if not self.__check_preconditions("skip applying new configuration..."):
             return
         current_config, manifest = self.cfh.get_installed_stack()
         try:
@@ -167,11 +163,7 @@ class MainLogic:
                 cli.print_logon_banner()
 
     def restart_application(self) -> None:
-        if not self.__check_if_deployed():
-            lg.warning("SmartMonitoring is not deployed, skipping restart...")
-            return
-        if self.__check_if_deployment_in_progress():
-            lg.warning("Deployment is in progress, please wait until it is finished.")
+        if not self.__check_preconditions("skipping restart..."):
             return
 
         lg.info("Restarting smartmonitoring deployment...")
@@ -202,11 +194,7 @@ class MainLogic:
             raise e
 
     def remove_application(self) -> None:
-        if not self.__check_if_deployed():
-            lg.warning("SmartMonitoring is not deployed, skipping removal...")
-            return
-        if self.__check_if_deployment_in_progress():
-            lg.warning("Deployment is in progress. Please wait until it is finished.")
+        if not self.__check_preconditions("skipping removal..."):
             return
         lg.info("Removing smartmonitoring deployment from this system...")
         config, manifest = self.cfh.get_installed_stack()
@@ -218,11 +206,7 @@ class MainLogic:
         lg.info("SmartMonitoring application successfully removed")
 
     def update_application(self, force: bool) -> None:
-        if not self.__check_if_deployed():
-            lg.warning("SmartMonitoring is not deployed on this system. Please deploy SmartMonitoring first.")
-            return
-        if self.__check_if_deployment_in_progress():
-            lg.warning("Deployment is already in progress. Please wait until it is finished.")
+        if not self.__check_preconditions("skipping update..."):
             return
 
         lg.info("Retrieving local configuration and update manifest...")
@@ -271,3 +255,12 @@ class MainLogic:
         else:
             lg.debug("No deployment in progress...")
             return False
+
+    def __check_preconditions(self, Message: str) -> bool:
+        if not self.__check_if_deployed():
+            lg.warning(f'SmartMonitoring is not deployed, {Message}')
+            return False
+        if self.__check_if_deployment_in_progress():
+            lg.warning("A Deployment is already in progress. Please try again later.")
+            return False
+        return True
