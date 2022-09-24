@@ -9,7 +9,10 @@ SmartMonitoring-CLI can be installed with the following command:
 wget -qO - https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/install.sh | bash <(cat) </dev/tty <smartmonitoring-cli_version>
 ````
 The version-number has to be a valid release version from the releases page.
-
+Example:
+````
+wget -qO - https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/install.sh | bash <(cat) </dev/tty 0.7.0
+````
 After installation of SmartMonitoring-CLI and all its dependencies, SmartMonitoring-CLI automatically performs the initial deployment.
 
 ## Available Commands
