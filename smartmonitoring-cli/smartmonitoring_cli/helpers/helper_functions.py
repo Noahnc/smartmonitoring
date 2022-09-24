@@ -1,6 +1,7 @@
 import logging as lg
 import os
 import socket
+import requests
 
 
 def delete_file_if_exists(filename) -> None:
@@ -42,3 +43,23 @@ def get_public_ip_address() -> str:
         lg.debug("Error getting public ip address: " + str(e))
         public_ip = "unknown"
     return public_ip
+
+def check_internet_connection() -> bool:
+    if check_server_connection("https://www.google.com"):
+        return True
+    elif check_server_connection("https://www.bing.com"):
+        return True
+    elif check_server_connection("https://www.yahoo.com"):
+        return True
+    else:
+        lg.debug("No internet connection detected")
+        return False
+
+def check_server_connection(url: str) -> bool:
+    try:
+        requests.get(url, timeout=4)
+        lg.debug(f'Connection to {url} successful')
+        return True
+    except Exception as e:
+        lg.debug(f'Error connecting to: {url} - {e}')
+        return False

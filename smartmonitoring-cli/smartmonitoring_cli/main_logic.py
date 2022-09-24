@@ -144,7 +144,7 @@ class MainLogic:
             lg.info("Skipped applying new configuration...")
             return
         lg.info("Applying new local configuration...")
-        self.__replace_deployment(current_config, new_config, manifest, manifest)
+        deph.replace_deployment(current_config, new_config, manifest, manifest)
 
     def print_status(self, disable_refresh: bool, banner_version: bool) -> None:
         cli.print_logo()
@@ -176,6 +176,9 @@ class MainLogic:
         if self.__check_if_deployed():
             lg.warning("SmartMonitoring is already deployed, skipping deployment...")
             return
+        if not hf.check_internet_connection():
+            lg.error("No internet connection, skipping deployment...")
+            return
         lg.info("Deploying smartmonitoring application to this system...")
         lg.info("Retrieving local configuration and update manifest...")
         config, manifest = self.cfh.get_config_and_manifest()
@@ -185,7 +188,7 @@ class MainLogic:
             self.cfh.validate_config_against_manifest(config, manifest)
             dock.pull_images(manifest.containers)
             dock.create_inter_network()
-            deph.install_application(config, manifest, dock, self.cfh)
+            deph.install_deployment(config, manifest, dock, self.cfh)
             self.cfh.save_installed_stack(config, manifest)
             self.cfh.save_status("Deployed", upd_channel=config.update_channel, pkg_version=manifest.package_version)
             lg.info("SmartMonitoring application successfully deployed...")
@@ -207,6 +210,9 @@ class MainLogic:
 
     def update_application(self, force: bool) -> None:
         if not self.__check_preconditions("skipping update..."):
+            return
+        if not hf.check_internet_connection():
+            lg.error("No internet connection, skipping update...")
             return
 
         lg.info("Retrieving local configuration and update manifest...")

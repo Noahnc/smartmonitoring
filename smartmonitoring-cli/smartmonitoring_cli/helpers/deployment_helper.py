@@ -26,7 +26,7 @@ def replace_deployment(current_config: LocalConfig,
         lg.info("Removing old containers...")
         uninstall_application(current_manifest, dock)
         lg.info("Creating new containers...")
-        install_application(new_config, new_manifest, dock, cfh)
+        install_deployment(new_config, new_manifest, dock, cfh)
     except ContainerCreateError as e:
         __perform_fallback(cfh, current_config, current_manifest, dock, e, new_manifest)
         return False
@@ -46,17 +46,17 @@ def __perform_fallback(cfh, current_config, current_manifest, dock, e, new_manif
     lg.debug("Removing possibly created new containers...")
     uninstall_application(new_manifest, dock)
     lg.info("Creating old containers...")
-    install_application(current_config, current_manifest, dock)
+    install_deployment(current_config, current_manifest, dock)
     cfh.save_status("DeploymentError", error_msg=str(e))
     lg.info("Performing cleanup...")
     dock.perform_cleanup()
     lg.info("Old containers successfully created...")
 
 
-def install_application(config: LocalConfig,
-                          manifest: UpdateManifest,
-                          dock: DockerHandler,
-                          cfh: DataHandler) -> None:
+def install_deployment(config: LocalConfig,
+                       manifest: UpdateManifest,
+                       dock: DockerHandler,
+                       cfh: DataHandler) -> None:
     env_secrets = cfh.generate_dynamic_secrets(manifest.dynamic_secrets)
     for container in manifest.containers:
         env_vars = cfh.compose_env_variables(config, container, env_secrets)
