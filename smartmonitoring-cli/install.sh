@@ -9,8 +9,9 @@
 #                    Version 1.0.1 | 29.08.2022
 
 # Global config variables
+var_smartmonitoring_cli_version=$1
 var_python_version="Python3.10"
-var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/0.7.1/smartmonitoring_cli-0.7.1.tar.gz"
+var_smartmonitoring_download_url="https://github.com/Noahnc/smartmonitoring/releases/download/$var_smartmonitoring_cli_version/smartmonitoring_cli-$var_smartmonitoring_cli_version.tar.gz"
 var_smartmonitoring_update_manifest_url="https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/manifest.yaml"
 var_psk_size_bit=256
 var_smartmonitoring_file_name="smartmonitoring.tar.gz"
@@ -22,6 +23,7 @@ var_install_log_file="$var_smartmonitoring_log_folder/install.log"
 var_smartmonitoring_config_file_path="$var_smartmonitoring_config_folder/smartmonitoring_config.yaml"
 var_psk_file_path="$var_smartmonitoring_config_folder/psk_key.txt"
 var_app_name="SmartMonitoring-CLI"
+
 
 # Catch shell termination
 trap ctrl_c INT
@@ -36,9 +38,17 @@ function error() {
     # Delete downloaded smartmonitoring_cli sdist file
     delete_file "$var_smartmonitoring_file_name"
     echo -e "\e[31m
-A critical error occurred during installation of $var_app_name.
+A critical error occurred during installation of $var_app_name:
+$1
 Please check the following log file for more information:\e[39m
 Logfile: $var_install_log_file"
+    exit 1
+}
+
+function minimal_error() {
+    # Delete downloaded smartmonitoring_cli sdist file
+    delete_file "$var_smartmonitoring_file_name"
+    echo -e "\e[31m$1\e[39m"
     exit 1
 }
 
@@ -62,7 +72,7 @@ function confirm_task_ok() {
 function task_error() {
     clear_last_line
     echo -e "\e[31m[ ERROR ]\e[39m $1"
-    error "$1"
+    error "Error running the following Task: $1"
 }
 
 # prints that a task has started
@@ -85,14 +95,29 @@ function install_program() {
     fi
 }
 
+function run_command_and_log() {
+    $1 &>>$var_install_log_file
+}
+
 # function that takes a command and a description
 # runs the command and shows the current status (running, finished or failed)
 function perform_operation() {
     command=$1
     name=$2
     start_task "$name"
-    $command &>>$var_install_log_file || task_error "$name"
+    run_command_and_log "$command" || task_error "$name"
     confirm_task_ok "$name"
+}
+
+function check_if_url_is_valid() {
+    if wget -q --method=HEAD "$1";
+     then
+      run_command_and_log "echo 'URL is valid: $1'"
+      return 0
+     else
+      run_command_and_log "echo 'URL is invalid: $1'"
+      return 1
+    fi
 }
 
 # function that sets the login banner
@@ -203,7 +228,7 @@ EOF
 
 # downloads and installs smartmonitoring_cli sdist package
 function install_smartmonitoring() {
-    wget $var_smartmonitoring_download_url -O $var_smartmonitoring_file_name
+    wget "$var_smartmonitoring_download_url" -O $var_smartmonitoring_file_name
     pip install $var_smartmonitoring_file_name
 }
 
@@ -214,6 +239,25 @@ function set_ubuntu_settings(){
 }
 
 ########################################## Script entry point ################################################
+
+# Check if executed on Ubuntu Linux and if not, exit.
+if ! [[ -f /etc/lsb-release ]]; then
+    minimal_error "SmartMonitoring Proxys can only be installed on Ubuntu Linux."
+fi
+
+# Check if executed as root and exit if not.
+if (($EUID != 0)); then
+    minimal_error "Pleas run this script with root privileges."
+fi
+
+# check if version has not been provided as parameter
+if [[ -z "$var_smartmonitoring_cli_version" ]]; then
+    minimal_error "Please provide a version number as parameter."
+fi
+
+if ! check_if_url_is_valid "$var_smartmonitoring_download_url"; then
+    minimal_error "SmartMonitoring-CLI version $var_smartmonitoring_cli_version not found, please specify a valid version number."
+fi
 
 print_logo
 echo -e " \e[34m
@@ -228,16 +272,6 @@ This script can be terminated any time with Ctrl+C.
 \e[39m
 "
 
-# Check if executed on Ubuntu Linux and if not, exit.
-if ! [[ -f /etc/lsb-release ]]; then
-    error "SmartMonitoring Proxys can only be installed on Ubuntu Linux."
-fi
-
-# Check if executed as root and exit if not.
-# shellcheck disable=SC2004
-if (($EUID != 0)); then
-    error "Pleas run this script with root privileges."
-fi
 
 # Check if smartmonitoring_cli is already installed.
 if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
