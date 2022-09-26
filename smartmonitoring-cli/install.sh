@@ -4,9 +4,9 @@
 #         Copyright © by Noah Canadea | All rights reserved
 ########################################################################
 #                           Description
-#       Bash Script to setup a smartmonitoring_cli proxy server
+#           Bash Script to setup a SmartMonitoring Proxy
 #
-#                    Version 1.0.1 | 29.08.2022
+#                    Version 1.0.2 | 26.09.2022
 
 # Global config variables
 var_smartmonitoring_cli_version=$1
@@ -219,11 +219,7 @@ Interface Agent:\e[33m zabbix-agent2-container\e[34m
 
 # creates a hourly running cron job
 function create_cron_job() {
-    cat >/etc/cron.hourly/smartmonitoring<<EOF
-#!/bin/bash
-/usr/local/bin/smartmonitoring update -s
-EOF
-    chmod +x /etc/cron.hourly/smartmonitoring
+  echo "*/5   * * * *   root    /usr/local/bin/smartmonitoring update -s" >> /etc/crontab
 }
 
 # downloads and installs smartmonitoring_cli sdist package
@@ -238,7 +234,9 @@ function set_ubuntu_settings(){
     timedatectl set-timezone Europe/Zurich
 }
 
+##############################################################################################################
 ########################################## Script entry point ################################################
+##############################################################################################################
 
 # Check if executed on Ubuntu Linux and if not, exit.
 if ! [[ -f /etc/lsb-release ]]; then
@@ -255,6 +253,7 @@ if [[ -z "$var_smartmonitoring_cli_version" ]]; then
     minimal_error "Please provide a version number as parameter."
 fi
 
+# check if version exists in github releases
 if ! check_if_url_is_valid "$var_smartmonitoring_download_url"; then
     minimal_error "SmartMonitoring-CLI version $var_smartmonitoring_cli_version not found, please specify a valid version number."
 fi
