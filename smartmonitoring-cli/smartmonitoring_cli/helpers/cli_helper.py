@@ -1,14 +1,9 @@
-import logging as lg
-import os
 import platform
 import socket
-import sys
 import time
 from multiprocessing import Pool
-from pathlib import Path
 
 import psutil
-from packaging import version
 from pyfiglet import Figlet
 from rich.console import Console
 from rich.live import Live
@@ -17,14 +12,9 @@ from rich.table import Table
 
 import smartmonitoring_cli.const_settings as cs
 import smartmonitoring_cli.helpers.helper_functions as hf
-from smartmonitoring_cli.handlers.data_handler import DataHandler
-import smartmonitoring_cli.helpers.log_helper as lh
 from smartmonitoring_cli import __version__
-from smartmonitoring_cli.handlers.data_handler import ConfigError, ManifestError, \
-    ValueNotFoundInConfig, InstalledStackInvalid
 from smartmonitoring_cli.handlers.data_handler import DataHandler
-from smartmonitoring_cli.handlers.docker_handler import DockerHandler, ContainerCreateError, \
-    ImageDoesNotExist
+from smartmonitoring_cli.handlers.docker_handler import DockerHandler
 from smartmonitoring_cli.models.local_config import LocalConfig
 from smartmonitoring_cli.models.update_manifest import UpdateManifest, ContainerConfig
 
@@ -170,11 +160,11 @@ def print_logon_banner(config: LocalConfig = None, manifest: UpdateManifest = No
         channel = config.update_channel
     print("".center(cs.CLI_WIDTH - 10, "-"))
     grid = Table.grid(collapse_padding=False)
-    grid.add_column(justify="Left")
-    grid.add_column(justify="Right")
+    grid.add_column(justify="left")
+    grid.add_column(justify="right")
     grid.add_column(justify="center")
-    grid.add_column(justify="Left")
-    grid.add_column(justify="Right")
+    grid.add_column(justify="left")
+    grid.add_column(justify="right")
     grid.add_row("Deployment Status: ", status, "        ", "Hostname: ", socket.gethostname())
     grid.add_row("Package Version: ", version, "        ", "Local IP: ", hf.get_local_ip_address())
     grid.add_row("Update Channel: ", channel, "         ", "Public IP: ", hf.get_public_ip_address())

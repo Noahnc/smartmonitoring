@@ -1,16 +1,10 @@
 import logging as lg
 import os
-import platform
-import socket
 import sys
-import time
-from multiprocessing import Pool
 from pathlib import Path
 
-import psutil
 from packaging import version
 from rich.console import Console
-from rich.live import Live
 from rich.table import Table
 
 import smartmonitoring_cli.const_settings as cs
@@ -18,14 +12,11 @@ import smartmonitoring_cli.helpers.cli_helper as cli
 import smartmonitoring_cli.helpers.deployment_helper as deph
 import smartmonitoring_cli.helpers.helper_functions as hf
 import smartmonitoring_cli.helpers.log_helper as lh
-from smartmonitoring_cli import __version__
 from smartmonitoring_cli.handlers.data_handler import ConfigError, ManifestError, \
     ValueNotFoundInConfig, InstalledStackInvalid
 from smartmonitoring_cli.handlers.data_handler import DataHandler
 from smartmonitoring_cli.handlers.docker_handler import DockerHandler, ContainerCreateError, \
     ImageDoesNotExist
-from smartmonitoring_cli.models.local_config import LocalConfig
-from smartmonitoring_cli.models.update_manifest import UpdateManifest, ContainerConfig
 
 PARENT_FOLDER = os.path.dirname(os.path.dirname(__file__))
 
@@ -132,7 +123,7 @@ class MainLogic:
             new_config = self.cfh.get_local_config()
             self.cfh.validate_config_against_manifest(new_config, manifest)
         except (ConfigError, ValueNotFoundInConfig) as e:
-            lg.error(f'Config file is invalid: {e}')
+            lg.error(f'{e}')
             lg.info("You can validate the config file by running 'smartmonitoring validate-config'")
             return
         lg.info("Config file is valid")
@@ -144,7 +135,7 @@ class MainLogic:
             lg.info("Skipped applying new configuration...")
             return
         lg.info("Applying new local configuration...")
-        deph.replace_deployment(current_config, new_config, manifest, manifest)
+        deph.replace_deployment(current_config, new_config, manifest, manifest, self.cfh, DockerHandler())
 
     def print_status(self, disable_refresh: bool, banner_version: bool) -> None:
         cli.print_logo()
@@ -262,9 +253,9 @@ class MainLogic:
             lg.debug("No deployment in progress...")
             return False
 
-    def __check_preconditions(self, Message: str) -> bool:
+    def __check_preconditions(self, message: str) -> bool:
         if not self.__check_if_deployed():
-            lg.warning(f'SmartMonitoring is not deployed, {Message}')
+            lg.warning(f'SmartMonitoring is not deployed, {message}')
             return False
         if self.__check_if_deployment_in_progress():
             lg.warning("A Deployment is already in progress. Please try again later.")

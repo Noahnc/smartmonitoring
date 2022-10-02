@@ -44,6 +44,7 @@ def get_public_ip_address() -> str:
         public_ip = "unknown"
     return public_ip
 
+
 def check_internet_connection() -> bool:
     if check_server_connection("https://www.google.com"):
         return True
@@ -54,6 +55,7 @@ def check_internet_connection() -> bool:
     else:
         lg.debug("No internet connection detected")
         return False
+
 
 def check_server_connection(url: str) -> bool:
     try:

@@ -95,7 +95,6 @@ class DataHandler:
         lg.debug('Processing update manifest from dict to object')
         valid, message = self.validate_update_manifest(update_manifest)
         if not valid:
-            lg.error(f'Update manifest not valid: {message}')
             raise ManifestError(f'Update manifest not valid: {message}')
         try:
             manifest = UpdateManifest.from_dict(update_manifest)
@@ -105,7 +104,8 @@ class DataHandler:
         lg.debug('Update manifest dict successfully processed to object')
         return manifest
 
-    def validate_config_against_manifest(self, config: LocalConfig, manifest: UpdateManifest, check_files: bool = True) -> None:
+    def validate_config_against_manifest(self, config: LocalConfig, manifest: UpdateManifest,
+                                         check_files: bool = True) -> None:
         lg.debug("Validating local config against update manifest")
         env_secrets = self.generate_dynamic_secrets(manifest.dynamic_secrets)
         for container in manifest.containers:
@@ -117,12 +117,10 @@ class DataHandler:
         lg.debug("Processing local config from dict to object")
         valid, message = self.validate_local_config(local_config)
         if not valid:
-            lg.error(f'Local config not valid: {message}')
             raise ConfigError(f'Local config not valid: {message}')
         try:
             config = LocalConfig.from_dict(local_config)
         except Exception as e:
-            lg.error("Error converting local config to object.")
             raise ConfigError(f'Error converting local config to object. Error message: {e})') from e
         lg.debug("Local config dict successfully processed to object")
         return config

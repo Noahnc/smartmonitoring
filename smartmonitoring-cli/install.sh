@@ -55,8 +55,8 @@ function minimal_error() {
 # function to delete a file
 function delete_file() {
     if [ -f "$1" ]; then
-        echo "Deleting file: $1"
-        rm -f "$1"
+        echo "Deleting file: $1" &>>$var_install_log_file
+        rm -f "$1" &>>$var_install_log_file
     fi
 }
 # clears the last line that was printed to console
@@ -351,4 +351,4 @@ else
 fi
 ########################################## Script end ################################################
 # delete downloaded file
-delete_file "$var_smartmonitoring_file_name" &>>$var_install_log_file
+delete_file "$var_smartmonitoring_file_name"

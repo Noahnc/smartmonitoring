@@ -3,16 +3,15 @@ from smartmonitoring_cli.handlers.data_handler import DataHandler
 from smartmonitoring_cli.handlers.docker_handler import DockerHandler, ContainerCreateError, \
     ImageDoesNotExist
 from smartmonitoring_cli.models.local_config import LocalConfig
-from smartmonitoring_cli.models.update_manifest import UpdateManifest, ContainerConfig
+from smartmonitoring_cli.models.update_manifest import UpdateManifest
 
 
 def replace_deployment(current_config: LocalConfig,
-                         new_config: LocalConfig,
-                         current_manifest: UpdateManifest,
-                         new_manifest: UpdateManifest,
-                         cfh: DataHandler,
-                         dock: DockerHandler) -> bool:
-
+                       new_config: LocalConfig,
+                       current_manifest: UpdateManifest,
+                       new_manifest: UpdateManifest,
+                       cfh: DataHandler,
+                       dock: DockerHandler) -> bool:
     cfh.validate_config_against_manifest(new_config, new_manifest)
     cfh.save_status("Deploying")
     try:
@@ -40,13 +39,14 @@ def replace_deployment(current_config: LocalConfig,
     return True
 
 
-def __perform_fallback(cfh, current_config, current_manifest, dock, e, new_manifest):
+def __perform_fallback(cfh: DataHandler, current_config: LocalConfig, current_manifest: UpdateManifest,
+                       dock: DockerHandler, e: Exception, new_manifest: UpdateManifest) -> None:
     lg.error(f"Error while deploying new containers: {e}")
     lg.info("Performing fallback to previous version...")
     lg.debug("Removing possibly created new containers...")
     uninstall_application(new_manifest, dock)
     lg.info("Creating old containers...")
-    install_deployment(current_config, current_manifest, dock)
+    install_deployment(current_config, current_manifest, dock, cfh)
     cfh.save_status("DeploymentError", error_msg=str(e))
     lg.info("Performing cleanup...")
     dock.perform_cleanup()
