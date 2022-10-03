@@ -11,6 +11,13 @@ start_time = 1.0
 
 
 def setup_file_logger(file: os.path, level: str = "DEBUG", size: int = 1000, count: int = 10) -> None:
+    """
+    Setup file logger
+    :param file: File where the logs should be saved
+    :param level: Level for the log handler
+    :param size: Size of a single log file in MB
+    :param count: amount of files to keep
+    """
     log_file_size = size * 1024 * 1024
     main_logger = lg.getLogger()
     main_logger.setLevel(lg.getLevelName("DEBUG"))
@@ -20,7 +27,13 @@ def setup_file_logger(file: os.path, level: str = "DEBUG", size: int = 1000, cou
              ", file-size: " + str(log_file_size) + " byte, backup count: " + str(count))
 
 
-def update_file_logger(level: str = None, size: int = None, count: int = None):
+def update_file_logger(level: str = None, size: int = None, count: int = None) -> None:
+    """
+    Updates the existing file logger
+    :param level: New Level for the log handler
+    :param size: New max size of a single log file in MB
+    :param count: New amount of files to keep
+    """
     main_logger = lg.getLogger()
     message = "Settings for file-logger updated "
     # looking for file handlers
@@ -39,6 +52,11 @@ def update_file_logger(level: str = None, size: int = None, count: int = None):
 
 
 def add_console_logger(debug: bool = False, level: str = "INFO") -> None:
+    """
+    Adds a console logger to the main logger
+    :param debug: Set level to DEBUG
+    :param level: Level for the log handler, if debug is False
+    """
     main_logger = lg.getLogger()
     main_logger.setLevel(lg.getLevelName("DEBUG"))
     if debug:
@@ -53,6 +71,14 @@ def add_console_logger(debug: bool = False, level: str = "INFO") -> None:
 
 def __compose_rotating_file_handler(file: os.path, level: str = "DEBUG", size: int = 50,
                                     count: int = 5) -> logging.handlers.RotatingFileHandler:
+    """
+    Creates a rotating file handler
+    :param file: File where the logs should be saved
+    :param level: Level for the file handler
+    :param size: Max size of a single log file in MB
+    :param count: Max amount of files to keep
+    :return: Returns a rotating file handler
+    """
     format_log = lg.Formatter('%(asctime)s-%(levelname)s %(message)s')
     log_file_handler = logging.handlers.RotatingFileHandler(
         file, maxBytes=1024 * 1024 * size, backupCount=count)
@@ -62,6 +88,10 @@ def __compose_rotating_file_handler(file: os.path, level: str = "DEBUG", size: i
 
 
 def log_start(action: str):
+    """
+    Logs a start message and some other information
+    :param action: Name of the action that will be performed
+    """
     global start_time
     start_time = time.time()
     date_time = datetime.now().strftime("%H:%M:%S - %d/%m/%Y")
@@ -74,6 +104,7 @@ def log_start(action: str):
 
 
 def log_finish():
+    """Log finish message with total execution time"""
     lg.info(f' FINISHED AFTER {round(time.time() - start_time, 2)} SECONDS '.center(cs.CLI_WIDTH, '#'))
 
 
@@ -96,7 +127,12 @@ class ColoredLogFormat(logging.Formatter):
             logging.CRITICAL: self.bold_red + self.fmt + self.reset
         }
 
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
+    def format(self, message):
+        """
+        Format the log message
+        :param message: The Log Message
+        :return:
+        """
+        log_fmt = self.FORMATS.get(message.levelno)
         formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
+        return formatter.format(message)

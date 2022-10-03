@@ -20,21 +20,37 @@ from smartmonitoring_cli.models.update_manifest import UpdateManifest, Container
 
 
 def print_logo() -> None:
+    """Prints the SmartMonitoring logo"""
     f = Figlet(font='standard', width=cs.CLI_WIDTH, justify='center')
     print(f.renderText(cs.CLI_LOGO_TEXT))
 
 
 def print_paragraph(text: str) -> None:
+    """
+    Prints a paragraph with the given text
+    :param text: Text in the paragraph
+    """
     print(f' {text} '.center(cs.CLI_WIDTH + 5, "-"))
 
 
 def print_and_confirm_changes(changes: str) -> bool:
+    """
+    Prints a string of changes and asks the user to confirm them
+    :param changes: String of changes
+    :return: True if users confirms, False otherwise
+    """
     print_paragraph("The following changes were found in the configuration")
     Console().print(changes)
     return Confirm.ask("Do you want to apply these changes?")
 
 
 def print_system_status(cfh: DataHandler, config: LocalConfig = None, manifest: UpdateManifest = None) -> None:
+    """
+    Prints a table with information about the system and deployment status
+    :param cfh: A DataHandler instance
+    :param config: LocalConfig object
+    :param manifest: Manifest object
+    """
     if config is None or manifest is None:
         status = "Not deployed"
         version = "-"
@@ -65,7 +81,13 @@ def print_system_status(cfh: DataHandler, config: LocalConfig = None, manifest: 
     Console().print(table)
 
 
-def __generate_container_table(initializing: bool, containers: list[ContainerConfig] = None) -> Table.grid():
+def __generate_container_table(initializing: bool, containers: list[ContainerConfig] = None) -> Table:
+    """
+    Generates a table with information about the containers of the current deployment
+    :param initializing: Should be true on the first call of this function to initialize the table
+    :param containers: List of ContainerConfig objects for which the table should be generated
+    :return: Returns a Table object with the container information
+    """
     table = Table(width=cs.CLI_WIDTH, title="Container Statistics")
     if containers is None:
         table.add_column("[bright_cyan]SmartMonitoring not deployed, skipping container statistics...",
@@ -89,6 +111,10 @@ def __generate_container_table(initializing: bool, containers: list[ContainerCon
 
 
 def __generate_host_information_table() -> Table:
+    """
+    Generates a table with information about the host system
+    :return: Returns a Table object with the host information
+    """
     table = Table(width=cs.CLI_WIDTH,
                   title="Host Information",
                   show_header=False)
@@ -115,17 +141,32 @@ def __generate_host_information_table() -> Table:
 
 
 def __get_container_statistics_parallel(conf_containers: list[ContainerConfig]) -> list[dict]:
+    """
+    Gets the container statistics for all containers in the current deployment in parallel
+    :param conf_containers: List of ContainerConfig objects for which the statistics should be retrieved
+    :return: List of dictionaries with the container statistics
+    """
     with Pool(len(conf_containers)) as p:
         container_stats = p.map(get_container_stats_process, iter(conf_containers))
     return container_stats
 
 
 def get_container_stats_process(container_config: ContainerConfig) -> dict:
+    """
+    Gets the container statistics for a single container
+    :param container_config: ContainerConfig object for which the statistics should be retrieved
+    :return: Dictionary with the container statistics
+    """
     dock = DockerHandler()
     return dock.get_container_stats(container_config)
 
 
 def print_live_updating_tables(disable_refresh: bool, containers: list = None) -> None:
+    """
+    Prints the host information and container statistics tables in a loop
+    :param disable_refresh: Only print the tables once if true
+    :param containers: ContainerConfig objects for which the container statistics should be printed
+    """
     if disable_refresh:
         runs = 1
     else:
@@ -141,6 +182,12 @@ def print_live_updating_tables(disable_refresh: bool, containers: list = None) -
 
 
 def __compose_live_tables(initialize: bool, containers: list[ContainerConfig] = None) -> Table.grid:
+    """
+    Composes the host information and container statistics tables into a grid
+    :param initialize: Should be True for the first call to initialize the container table
+    :param containers: ContainerConfig objects for which the container statistics should be printed
+    :return: A Table grid object with the host information and container statistics tables
+    """
     grid = Table.grid()
     grid.add_column()
     grid.add_row(__generate_host_information_table())
@@ -150,6 +197,11 @@ def __compose_live_tables(initialize: bool, containers: list[ContainerConfig] = 
 
 
 def print_logon_banner(config: LocalConfig = None, manifest: UpdateManifest = None) -> None:
+    """
+    Prints a reduced status dashboard for log-in banners
+    :param config: Configuration object for the current deployment
+    :param manifest: Update manifest object for the current deployment
+    """
     if config is None or manifest is None:
         status = "Not deployed"
         version = "-"

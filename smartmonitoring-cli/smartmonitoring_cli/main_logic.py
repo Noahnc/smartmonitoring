@@ -42,6 +42,12 @@ class MainLogic:
         pass
 
     def setup_logging(self, debug: bool, silent: bool, only_critical: bool = False) -> None:
+        """
+        Setup logging for the Application.
+        :param debug: When True, debug messages are logged
+        :param silent: When True, all logs are saved to a file
+        :param only_critical: Only critical logs are printed to the console
+        """
         log_file_path = os.path.join(self.smartmonitoring_log_dir, cs.LOG_FILE_NAME)
         if not silent and not only_critical:
             lh.add_console_logger(debug)
@@ -69,6 +75,10 @@ class MainLogic:
             lh.update_file_logger(size=config.log_file_size_mb, count=config.log_file_count)
 
     def check_configurations(self, debug: bool) -> None:
+        """
+        Validate the local config file and the manifest for errors.
+        :param debug: Reraise exceptions if True, to print stack trace
+        """
         config_valid = True
         config_message = "Local Config is valid"
         manifest_valid = True
@@ -115,6 +125,10 @@ class MainLogic:
         Console().print(table)
 
     def validate_and_apply_config(self, silent: bool) -> None:
+        """
+        Validate the local config file and apply it if changes are present.
+        :param silent: Apply changes without asking for confirmation
+        """
         if not self.__check_preconditions("skip applying new configuration..."):
             return
         current_config, manifest = self.cfh.get_installed_stack()
@@ -138,6 +152,11 @@ class MainLogic:
         deph.replace_deployment(current_config, new_config, manifest, manifest, self.cfh, DockerHandler())
 
     def print_status(self, disable_refresh: bool, banner_version: bool) -> None:
+        """
+        Prints different information as status-dashboard.
+        :param disable_refresh: Print status only once
+        :param banner_version: Prints a reduced version of the status dashboard for login banners
+        """
         cli.print_logo()
         if self.__check_if_deployed():
             config, manifest = self.cfh.get_installed_stack()
@@ -154,6 +173,7 @@ class MainLogic:
                 cli.print_logon_banner()
 
     def restart_application(self) -> None:
+        """Restarts all containers of the current deployment."""
         if not self.__check_preconditions("skipping restart..."):
             return
 
@@ -164,6 +184,7 @@ class MainLogic:
         lg.info("All containers restarted successfully...")
 
     def deploy_application(self) -> None:
+        """Creates the initial Deployment."""
         if self.__check_if_deployed():
             lg.warning("SmartMonitoring is already deployed, skipping deployment...")
             return
@@ -188,6 +209,7 @@ class MainLogic:
             raise e
 
     def remove_application(self) -> None:
+        """Removes the current Deployment."""
         if not self.__check_preconditions("skipping removal..."):
             return
         lg.info("Removing smartmonitoring deployment from this system...")
@@ -200,6 +222,10 @@ class MainLogic:
         lg.info("SmartMonitoring application successfully removed")
 
     def update_application(self, force: bool) -> None:
+        """
+        Updates the current Deployment if a new version is available in the manifest.
+        :param force: Applies the manifest version even if the version is not newer than the current version
+        """
         if not self.__check_preconditions("skipping update..."):
             return
         if not hf.check_internet_connection():
@@ -221,6 +247,12 @@ class MainLogic:
                 lg.info(f"SmartMonitoring successfully updated to version {new_manifest.package_version}")
 
     def __check_version_is_newer(self, current_version: str, new_version: str) -> bool:
+        """
+        Checks if the new version is newer than the current version.
+        :param current_version: String of current version
+        :param new_version: String of new version
+        :return: True if the new version is newer, False otherwise
+        """
         if version.parse(current_version) < version.parse(new_version):
             lg.debug(f"Current version: {current_version} is older than new version: {new_version}")
             return True
@@ -233,6 +265,10 @@ class MainLogic:
             return False
 
     def __check_if_deployed(self) -> bool:
+        """
+        Checks if the application is already deployed.
+        :return: True if the application is deployed, False otherwise
+        """
         lg.debug("Checking if smartmonitoring application is already deployed...")
         if self.stack_file.exists():
             lg.debug("SmartMonitoring application is deployed on this system...")
@@ -242,6 +278,10 @@ class MainLogic:
             return False
 
     def __check_if_deployment_in_progress(self) -> bool:
+        """
+        Checks if the application is currently being deployed.
+        :return: True if the application is currently being deployed, False otherwise
+        """
         if not self.status_file.exists():
             lg.debug("No deployment in progress...")
             return False
@@ -254,6 +294,11 @@ class MainLogic:
             return False
 
     def __check_preconditions(self, message: str) -> bool:
+        """
+        Checks if the preconditions for the deployment are met.
+        :param message: Action that is skipped if the preconditions are not met
+        :return: True if the preconditions are met, False otherwise
+        """
         if not self.__check_if_deployed():
             lg.warning(f'SmartMonitoring is not deployed, {message}')
             return False

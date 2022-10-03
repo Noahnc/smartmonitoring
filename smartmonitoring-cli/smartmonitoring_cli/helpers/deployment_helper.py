@@ -12,6 +12,16 @@ def replace_deployment(current_config: LocalConfig,
                        new_manifest: UpdateManifest,
                        cfh: DataHandler,
                        dock: DockerHandler) -> bool:
+    """
+    Replaces the currently running containers with new ones
+    :param current_config: LocalConfig object of the currently running containers
+    :param new_config: LocalConfig object for the new containers
+    :param current_manifest: UpdateManifest object of the currently running containers
+    :param new_manifest: UpdateManifest object for the new containers
+    :param cfh: DataHandler instance
+    :param dock: DockerHandler instance
+    :return: True if successful, False otherwise
+    """
     cfh.validate_config_against_manifest(new_config, new_manifest)
     cfh.save_status("Deploying")
     try:
@@ -41,6 +51,15 @@ def replace_deployment(current_config: LocalConfig,
 
 def __perform_fallback(cfh: DataHandler, current_config: LocalConfig, current_manifest: UpdateManifest,
                        dock: DockerHandler, e: Exception, new_manifest: UpdateManifest) -> None:
+    """
+    Performs a fallback to the previous deployment
+    :param cfh: DataHandler instance
+    :param current_config: LocalConfig object of the currently running containers
+    :param current_manifest: UpdateManifest object of the currently running containers
+    :param dock: DockerHandler instance
+    :param e: Exception that was raised
+    :param new_manifest: UpdateManifest object that was attempted to be deployed
+    """
     lg.error(f"Error while deploying new containers: {e}")
     lg.info("Performing fallback to previous version...")
     lg.debug("Removing possibly created new containers...")
@@ -57,6 +76,13 @@ def install_deployment(config: LocalConfig,
                        manifest: UpdateManifest,
                        dock: DockerHandler,
                        cfh: DataHandler) -> None:
+    """
+    Creates the containers for the given config and manifest
+    :param config: LocalConfig object
+    :param manifest: UpdateManifest object
+    :param dock: DockerHandler instance
+    :param cfh: DataHandler instance
+    """
     env_secrets = cfh.generate_dynamic_secrets(manifest.dynamic_secrets)
     for container in manifest.containers:
         env_vars = cfh.compose_env_variables(config, container, env_secrets)
@@ -73,6 +99,11 @@ def install_deployment(config: LocalConfig,
 
 
 def uninstall_application(manifest: UpdateManifest, dock: DockerHandler) -> None:
+    """
+    Removes the containers for the given manifest
+    :param manifest: Current UpdateManifest object
+    :param dock: DockerHandler instance
+    """
     lg.info("Decommission currently running containers...")
     dock.remove_containers(manifest.containers)
     pass

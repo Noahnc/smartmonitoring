@@ -11,6 +11,7 @@ from smartmonitoring_cli.main_logic import MainLogic
 
 @click.group()
 def main():
+    # Check if run as root on linux systems and exit if not
     if sys.platform.startswith("linux"):
         if os.geteuid() != 0:
             print("You need to have root privileges to run this application.")
@@ -31,7 +32,7 @@ def restart(silent: bool, verbose: bool):
 @main.command()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Prints more information")
 def validate_config(verbose: bool):
-    """Validates the local config for errors in the syntax."""
+    """Validates the local config for syntax errors."""
     main_logic = prepare_cli("Applying new local config", verbose, False, True)
     command_executer(verbose, False, main_logic.check_configurations, verbose)
 
@@ -91,11 +92,23 @@ def status(verbose: bool, disable_refresh: bool, banner_version: bool):
 
 
 def exit_with_error(code: int) -> None:
+    """
+    Exits the CLI with the given error code.
+    :param code: Error code to exit with
+    """
     lg.critical(f'Exiting with error code {code} because of an critical error.')
     exit(code)
 
 
 def prepare_cli(action: str, verbose: bool, silent: bool, only_critical: bool = False) -> MainLogic:
+    """
+    Prepares the CLI for the main command.
+    :param action: Name of action that will be performed
+    :param verbose: Logs more information
+    :param silent: Logs all output to log file instead of console
+    :param only_critical: Only logs critical messages to console
+    :return: MainLogic object
+    """
     main_logic = MainLogic()
     command_executer(verbose, silent, main_logic.setup_logging, verbose, silent, only_critical)
     lh.log_start(action)
@@ -103,6 +116,13 @@ def prepare_cli(action: str, verbose: bool, silent: bool, only_critical: bool = 
 
 
 def command_executer(verbose: bool, silent: bool, function, *args) -> None:
+    """
+    Execute a function and handle errors.
+    :param verbose: Prints a stack trace if an error occurs
+    :param silent: When True, stack trace is logged with built-in logging module, otherwise with Rich
+    :param function: Function to execute
+    :param args: Arguments for the function
+    """
     try:
         function(*args)
     except KeyboardInterrupt:

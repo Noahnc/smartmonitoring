@@ -26,6 +26,10 @@ def create_folder_if_not_exists(folder: os.path) -> None:
 
 
 def get_local_ip_address() -> str:
+    """
+    Evaluates the local ip address of the device by connecting to google dns
+    :return: String of the local ip address
+    """
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
@@ -36,6 +40,10 @@ def get_local_ip_address() -> str:
 
 
 def get_public_ip_address() -> str:
+    """
+    Evaluates the public ip address of the device by connecting a public ip address service
+    :return: Public ip address as string
+    """
     import requests
     try:
         public_ip = requests.get('https://checkip.amazonaws.com').text.strip()
@@ -46,6 +54,10 @@ def get_public_ip_address() -> str:
 
 
 def check_internet_connection() -> bool:
+    """
+    Checks if the device is connected to the internet by connecting to different services
+    :return: True if one of the services is reachable, False if not
+    """
     if check_server_connection("https://www.google.com"):
         return True
     elif check_server_connection("https://www.bing.com"):
@@ -58,6 +70,11 @@ def check_internet_connection() -> bool:
 
 
 def check_server_connection(url: str) -> bool:
+    """
+    Check if the specified url is reachable
+    :param url: URL to check
+    :return: True if reachable, False if not
+    """
     try:
         requests.get(url, timeout=4)
         lg.debug(f'Connection to {url} successful')

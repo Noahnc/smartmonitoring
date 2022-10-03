@@ -24,10 +24,16 @@ class ImageDoesNotExist(Exception):
 
 
 class DockerHandler:
-    def __init__(self):
-        self.__connect_to_local_docker_instance()
+    def __init__(self, client: docker = None):
+        if client is None:
+            self.__connect_to_local_docker_instance()
 
     def __connect_to_local_docker_instance(self, attempt: int = 1) -> None:
+        """
+        Connect to the local docker instance
+        :param attempt: Amount of attempts to connect to the docker instance
+        before a DockerInstanceUnavailable exception is raised
+        """
         retries = 3
         if attempt > retries:
             lg.error("Could not connect to local docker instance")
@@ -41,6 +47,11 @@ class DockerHandler:
             self.__connect_to_local_docker_instance(attempt + 1)
 
     def get_container(self, container_name: str) -> containers.Container:
+        """
+        Get a container by its name
+        :param container_name: Name of the container as string
+        :return: Docker container object
+        """
         try:
             lg.debug(f'Getting container {container_name}')
             return self.client.containers.get(container_name)
@@ -49,12 +60,22 @@ class DockerHandler:
             raise
 
     def get_containers_from_config(self, conf_containers: list[ContainerConfig]) -> list[containers.Container]:
+        """
+        Get a list of Docker container objects from a list of ContainerConfig objects
+        :param conf_containers: List of ContainerConfig objects
+        :return: List of Docker container objects
+        """
         containers = []
         for container in conf_containers:
             containers.append(self.get_container(container.name))
         return containers
 
     def get_container_stats(self, container_config: ContainerConfig) -> dict:
+        """
+        Get statistics of a container (status, cpu usage, memory usage ...)
+        :param container_config: ContainerConfig object
+        :return: Dict with statistics of the container
+        """
         container = None
         try:
             container = self.get_container(container_config.name)
@@ -87,6 +108,11 @@ class DockerHandler:
         }
 
     def __calculate_cpu_usage(self, stats: dict) -> float:
+        """
+        Calculate the cpu usage of a container based on the stats form docker api
+        :param stats: Stats dict of a container
+        :return: CPU usage as float
+        """
         usage_delta = stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage']
         system_delta = stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage']
         len_cpu = stats['cpu_stats']['online_cpus']
@@ -94,6 +120,10 @@ class DockerHandler:
         return round(percentage, 2)
 
     def start_container(self, container_name: str) -> None:
+        """
+        Start a container by its name
+        :param container_name: Name of the container as string
+        """
         try:
             lg.info(f'Starting Container {container_name}')
             container = self.get_container(container_name)
@@ -104,6 +134,10 @@ class DockerHandler:
             raise e
 
     def stop_container(self, container_name: str):
+        """
+        Stop a container by its name
+        :param container_name: Name of the container as string
+        """
         try:
             container = self.get_container(container_name)
             lg.info(f'Stopping container {container_name}')
@@ -116,6 +150,10 @@ class DockerHandler:
             raise
 
     def restart_container(self, container_name: str) -> None:
+        """
+        Restart a container by its name
+        :param container_name: Name of the container as string
+        """
         try:
             lg.info(f'Restarting container {container_name}')
             container = self.get_container(container_name)
@@ -126,23 +164,43 @@ class DockerHandler:
             raise
 
     def restart_containers(self, conf_containers: list[ContainerConfig]) -> None:
+        """
+        Restart a list of containers
+        :param conf_containers: List of ContainerConfig objects
+        """
         for container in conf_containers:
             self.restart_container(container.name)
 
     def stop_containers(self, conf_containers: list[ContainerConfig]) -> None:
+        """
+        Stop a list of containers
+        :param conf_containers: List of ContainerConfig objects
+        """
         for container in conf_containers:
             self.stop_container(container.name)
 
     def start_containers(self, conf_containers: list[ContainerConfig]) -> None:
+        """
+        Start a list of containers
+        :param conf_containers: List of ContainerConfig objects
+        """
         for container in conf_containers:
             self.start_container(container.name)
 
     def remove_containers(self, conf_containers: list[ContainerConfig]) -> None:
+        """
+        Remove a list of containers
+        :param conf_containers: List of ContainerConfig objects
+        """
         self.stop_containers(conf_containers)
         for container in conf_containers:
             self.remove_container(container.name)
 
     def remove_container(self, container_name: str) -> None:
+        """
+        Remove a container by its name
+        :param container_name: Name of the container as string
+        """
         try:
             container = self.get_container(container_name)
             lg.info(f'Removing container {container_name}')
@@ -151,6 +209,9 @@ class DockerHandler:
             lg.debug(f'Skipping removal of container {container_name} because it does not exist')
 
     def create_inter_network(self) -> None:
+        """
+        Create the smartmonitoring bridge network
+        """
         try:
             self.client.networks.get('smartmonitoring_cli')
             lg.debug("SmartMonitoring bridge network already exists")
@@ -161,6 +222,9 @@ class DockerHandler:
                 "SmartMonitoring bridge network for container communication created")
 
     def remove_inter_network(self) -> None:
+        """
+        Remove the smartmonitoring bridge network
+        """
         try:
             self.client.networks.get('smartmonitoring_cli').remove()
             lg.info("SmartMonitoring bridge network removed")
@@ -168,25 +232,43 @@ class DockerHandler:
             lg.debug("SmartMonitoring bridge network not found, skipping removal")
 
     def __connect_container_to_inter_network(self, container: containers.Container) -> None:
+        """
+        Connect a container to the smartmonitoring bridge network
+        :param container: Docker container object to connect
+        """
         network = self.client.networks.get("smartmonitoring_cli")
         network.connect(container)
         lg.debug(f'Container {container.name} connected to SmartMonitoring bridge network')
 
     def perform_cleanup(self) -> None:
+        """
+        Perform a cleanup of all unused images and volumes
+        """
         self.__remove_unused_images()
         self.__remove_unused_volumes()
 
     def __remove_unused_images(self) -> None:
+        """
+        Remove all unused images
+        """
         images = self.client.images.prune(filters={'dangling': False})
         if images["ImagesDeleted"] is None: return
         lg.debug(f'Removed {len(images["ImagesDeleted"])} images and freed {images["SpaceReclaimed"]} bytes')
 
     def __remove_unused_volumes(self) -> None:
+        """
+        Remove all unused volumes
+        """
         volumes = self.client.volumes.prune()
         if volumes["VolumesDeleted"] is None: return
         lg.debug(f'Removed {len(volumes["VolumesDeleted"])} volumes and freed {volumes["SpaceReclaimed"]} bytes')
 
     def __check_if_image_exists(self, image_name: str) -> bool:
+        """
+        Check if an image exists in local docker instance
+        :param image_name: Name of the image as string
+        :return: True if image exists, False otherwise
+        """
         try:
             image = self.client.images.get(image_name)
             lg.debug(f'Image {image} exists')
@@ -196,6 +278,11 @@ class DockerHandler:
             return False
 
     def pull_images(self, containers_config: list[ContainerConfig]) -> None:
+        """
+        Pull all images for a list of containers. If an image is not found on Docker Hub, a ImageDoesNotExist exception
+        is raised
+        :param containers_config: List of ContainerConfig objects
+        """
         exist = True
         not_found_images = []
         for container in containers_config:
@@ -209,6 +296,10 @@ class DockerHandler:
             raise ImageDoesNotExist(f'Error pulling the following images from Docker hub: {not_found_images}')
 
     def __pull_image_if_not_exists(self, image: str) -> None:
+        """
+        Pull an image from Docker Hub if it does not exist in local docker instance
+        :param image: Name of the image as string
+        """
         if not self.__check_if_image_exists(image):
             try:
                 lg.info(f'Pulling image {image} from docker hub')
@@ -221,6 +312,11 @@ class DockerHandler:
             lg.debug(f'Image {image} already exists, skip pulling')
 
     def __compose_files(self, files: list[MappedFile]) -> Optional[list[Mount]]:
+        """
+        Compose a list of Mount objects from a list of MappedFile objects
+        :param files: List of MappedFile objects to compose
+        :return: List of Docker Mount objects
+        """
         if files is None: return None
         mount_files = []
         lg.debug(f'Composing files {files} to docker mounts object')
@@ -233,6 +329,11 @@ class DockerHandler:
         return mount_files
 
     def __compose_ports(self, ports: list[Port]) -> Optional[dict]:
+        """
+        Compose a dictionary of ports from a list of Port objects
+        :param ports: List of Port objects to compose
+        :return: dictionary of ports
+        """
         if ports is None: return None
         port_bindings = {}
         lg.debug(f'Composing ports {ports} to docker port mapping dict')
@@ -242,12 +343,23 @@ class DockerHandler:
         return port_bindings
 
     def __create_container_logger(self, container_name: str) -> LogConfig:
+        """
+        Create a LogConfig object for a container
+        :param container_name: Name of the container, used for the name of the log file
+        :return: LogConfig object
+        """
         return LogConfig(type=LogConfig.types.JSON, config={
             'max-size': '500m',
             'labels': f'{container_name}_log'
         })
 
     def create_container(self, container: ContainerConfig, env_vars: dict, files: list[MappedFile] = None) -> None:
+        """
+        Create a container from a ContainerConfig object
+        :param container: ContainerConfig object
+        :param env_vars: Environment variables to pass to the container
+        :param files: List of MappedFile objects to mount in the container
+        """
         self.remove_container(container.name)
         try:
             mapped_files = self.__compose_files(files)
