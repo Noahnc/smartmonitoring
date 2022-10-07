@@ -9,38 +9,38 @@ SmartMonitoring-CLI can be installed with the following command:
 wget -qO - https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/install.sh | bash <(cat) </dev/tty <smartmonitoring-cli_version>
 ````
 The version-number has to be a valid release version from the releases page.
-Example:
+Example for version 0.7.0:
 ````
 wget -qO - https://storage.googleapis.com/btc-public-accessible-data/smartmonitoring_proxies/install.sh | bash <(cat) </dev/tty 0.7.0
 ````
-After installation of SmartMonitoring-CLI and all its dependencies, SmartMonitoring-CLI automatically performs the initial deployment.
+SmartMonitoring-CLI and all it's dependencies got installed successfully, SmartMonitoring-CLI automatically performs the initial deployment.
 
 ## Available Commands
-The following command perform an initial deployment based on the manifest.
+The following command perform an initial deployment based on the manifest:
 ````
 smartmonitoring deply <--verbose> <--silent>
 ````
-This command removes an active deployment completely.
+This command removes an active deployment completely:
 ````
 smartmonitoring undeploy <--verbose> <--silent>
 ````
-Apply a modified local config.
+Apply a modified local config:
 ````
 smartmonitoring apply-config <--verbose> <--silent>
 ````
-Restart all containers of the current deployment.
+Restart all containers of the current deployment:
 ````
 smartmonitoring restart-config <--verbose> <--silent>
 ````
-Shows a Dashboard with usefully information about the Host and the current Deployment.
+Shows a Dashboard with usefully information about the Host and the current Deployment:
 ````
 smartmonitoring status <--verbose> <--disable-refresh> <--banner-version>
 ````
-Checks if a new SmartMonitoring Deployment is available and deploys it if so.
+Checks if a new SmartMonitoring Deployment is available and deploys it if so:
 ````
 smartmonitoring update <--verbose> <--silent> <--force>
 ````
-Checks the local config file and the manifest for errors.
+Checks the local config file and the manifest for errors:
 ````
 smartmonitoring validate-config <--verbose>
 ````
