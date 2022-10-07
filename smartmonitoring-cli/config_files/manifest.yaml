@@ -77,7 +77,7 @@ versions:
         containers:
           - name: zabbix_mysql_container
             hostname: zabbix-mysql-container
-            image: ubuntu/mysql:8.0-22.04_edge
+            image: mariadb:10.9.3
             privileged: false
             config:
               static:

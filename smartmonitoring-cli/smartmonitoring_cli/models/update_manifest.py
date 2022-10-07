@@ -131,6 +131,7 @@ class ContainerConfig:
     config: Config
     files: Optional[List[MappedFile]] = None
     ports: Optional[List[Port]] = None
+    commands: Optional[List[str]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'ContainerConfig':
@@ -142,7 +143,8 @@ class ContainerConfig:
         config = Config.from_dict(obj.get("config"))
         files = from_union([lambda x: from_list(MappedFile.from_dict, x), from_none], obj.get("files"))
         ports = from_union([lambda x: from_list(Port.from_dict, x), from_none], obj.get("ports"))
-        return ContainerConfig(name, hostname, image, privileged, config, files, ports)
+        commands = from_union([lambda x: from_list(from_str, x), from_none], obj.get("commands"))
+        return ContainerConfig(name, hostname, image, privileged, config, files, ports, commands)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -153,6 +155,7 @@ class ContainerConfig:
         result["config"] = to_class(Config, self.config)
         result["files"] = from_union([lambda x: from_list(lambda x: to_class(MappedFile, x), x), from_none], self.files)
         result["ports"] = from_union([lambda x: from_list(lambda x: to_class(Port, x), x), from_none], self.ports)
+        result["commands"] = from_union([lambda x: from_list(from_str, x), from_none], self.commands)
         return result
 
 

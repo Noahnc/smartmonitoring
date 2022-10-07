@@ -369,6 +369,7 @@ class DockerHandler:
                 f'env {env_vars}')
             container = self.client.containers.create(
                 container.image,
+                command=container.commands,
                 name=container.name,
                 environment=env_vars,
                 hostname=container.hostname,

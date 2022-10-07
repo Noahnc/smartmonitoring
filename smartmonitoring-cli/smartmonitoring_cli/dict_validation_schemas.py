@@ -105,7 +105,12 @@ class ValidationSchemas:
                             }
                         }
 
-                    }
+                    },
+                    'commands': {
+                        'required': False,
+                        'nullable': True,
+                        'type': 'list'
+                    },
                 }
             }
         }
