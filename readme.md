@@ -24,14 +24,15 @@ This command removes an active deployment completely:
 ````
 smartmonitoring undeploy <--verbose> <--silent>
 ````
+Restart all containers of the current deployment:
+````
+smartmonitoring restart <--verbose> <--silent>
+````
 Apply a modified local config:
 ````
 smartmonitoring apply-config <--verbose> <--silent>
 ````
-Restart all containers of the current deployment:
-````
-smartmonitoring restart-config <--verbose> <--silent>
-````
+![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/apply-config.gif)
 Shows a Dashboard with usefully information about the Host and the current Deployment:
 ````
 smartmonitoring status <--verbose> <--disable-refresh> <--banner-version>
@@ -41,7 +42,9 @@ Checks if a new SmartMonitoring Deployment is available and deploys it if so:
 ````
 smartmonitoring update <--verbose> <--silent> <--force>
 ````
+![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/update.gif)
 Checks the local config file and the manifest for errors:
 ````
 smartmonitoring validate-config <--verbose>
 ````
+![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/validate-config.gif)
