@@ -3,7 +3,7 @@ In this repository are all files associated with the SmartMonitoring project.
 # Folder Structure
 - `proxy_container`: Contains all files to build the modified Zabbix Proxy Docker Image
 - `smartmonitoring-cli`: Contains all Source Code and other files regarding SmartMonitoring-CLI
----
+
 ## Installation of SmartMonitoring-CLI
 SmartMonitoring-CLI can be installed with the following command:
 ````
@@ -16,7 +16,6 @@ wget -qO - https://storage.googleapis.com/btc-public-accessible-data/smartmonito
 ````
 SmartMonitoring-CLI and all it's dependencies got installed successfully, SmartMonitoring-CLI automatically performs the initial deployment.
 
----
 ## Available Commands
 The following command perform an initial deployment based on the manifest:
 ````
