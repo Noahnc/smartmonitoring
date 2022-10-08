@@ -37,18 +37,21 @@ Apply a modified local config:
 smartmonitoring apply-config <--verbose> <--silent>
 ````
 ![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/apply-config.gif)
+
 \
 Shows a Dashboard with usefully information about the Host and the current Deployment:
 ````
 smartmonitoring status <--verbose> <--disable-refresh> <--banner-version>
 ````
 ![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/status-dashboard.gif)
+
 \
 Checks if a new SmartMonitoring Deployment is available and deploys it if so:
 ````
 smartmonitoring update <--verbose> <--silent> <--force>
 ````
 ![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/update.gif)
+
 \
 Checks the local config file and the manifest for errors:
 ````
