@@ -36,7 +36,7 @@ Shows a Dashboard with usefully information about the Host and the current Deplo
 ````
 smartmonitoring status <--verbose> <--disable-refresh> <--banner-version>
 ````
-![](https://github.com/noahnc/smartmonitoring/asset/status-dashboard.gif)
+![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/status-dashboard.gif)
 Checks if a new SmartMonitoring Deployment is available and deploys it if so:
 ````
 smartmonitoring update <--verbose> <--silent> <--force>
