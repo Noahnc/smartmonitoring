@@ -9,7 +9,7 @@ from docker.models import containers
 from docker.types import Mount, LogConfig
 
 from smartmonitoring_cli.models.update_manifest import ContainerConfig, MappedFile, Port
-
+import smartmonitoring_cli.const_settings as cs
 
 class DockerInstanceUnavailable(Exception):
     pass
@@ -349,7 +349,7 @@ class DockerHandler:
         :return: LogConfig object
         """
         return LogConfig(type=LogConfig.types.JSON, config={
-            'max-size': '500m',
+            'max-size': cs.CONTAINER_LOG_FILE_SIZE,
             'labels': f'{container_name}_log'
         })
 

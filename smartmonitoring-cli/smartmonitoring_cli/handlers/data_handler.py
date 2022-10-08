@@ -276,14 +276,19 @@ class DataHandler:
             raise InstalledStackInvalid(f'Error getting installed stack from file: {self.stack_file}, message: {e}')
 
     def save_status(self, status: str, upd_channel: str = None, pkg_version: str = None, error_msg: str = "-") -> None:
+        deployment_start = None
         allowed_statuses = ["Deployed", "Deploying", "DeploymentError"]
         if status not in allowed_statuses:
             raise ValueError(f'Invalid status: {status}, allowed statuses: {allowed_statuses}')
+
         if not self.status_file.exists():
             if pkg_version is None: pkg_version = "-"
             if upd_channel is None: upd_channel = "-"
             if status == "Deployed":
                 last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            elif status == "Deploying":
+                last_update = "-"
+                deployment_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             else:
                 last_update = "-"
             data = {
@@ -292,7 +297,8 @@ class DataHandler:
                 "smartmonitoring_version": __version__,
                 "update_channel": upd_channel,
                 "package_version": pkg_version,
-                "last_update": last_update
+                "last_update": last_update,
+                "deployment_start": deployment_start
             }
         else:
             data = self.get_status()
@@ -300,6 +306,9 @@ class DataHandler:
             if upd_channel is None: upd_channel = data["update_channel"]
             if status == "Deployed":
                 last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            elif status == "Deploying":
+                last_update = data["last_update"]
+                deployment_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             else:
                 last_update = data["last_update"]
             data["status"] = status
@@ -308,6 +317,7 @@ class DataHandler:
             data["update_channel"] = upd_channel
             data["package_version"] = pkg_version
             data["last_update"] = last_update
+            data["deployment_start"] = deployment_start
 
         lg.debug(f'Saving status: {status}')
         self.__save_json_file(self.status_file, data)

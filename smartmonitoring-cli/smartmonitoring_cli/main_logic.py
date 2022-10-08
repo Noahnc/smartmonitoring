@@ -1,6 +1,7 @@
 import logging as lg
 import os
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from packaging import version
@@ -280,18 +281,27 @@ class MainLogic:
     def __check_if_deployment_in_progress(self) -> bool:
         """
         Checks if the application is currently being deployed.
+        If the status is "Deploying" for more than the specified time, the deployment is considered to
+        be stuck and False is returned.
         :return: True if the application is currently being deployed, False otherwise
         """
         if not self.status_file.exists():
             lg.debug("No deployment in progress...")
             return False
+
         data = self.cfh.get_status()
-        if data["status"] == "Deploying":
-            lg.debug("Deployment already in progress...")
-            return True
-        else:
+        if data["status"] != "Deploying":
             lg.debug("No deployment in progress...")
             return False
+
+        if data["status"] == "Deploying":
+            error_time = datetime.strptime(data["deployment_start"], "%Y-%m-%d %H:%M:%S") + timedelta(minutes=cs.DEPLOYMENT_REPAIR_TIMEOUT_MINUTES)
+            if error_time < datetime.now():
+                lg.debug(f"Last deployment started over {cs.DEPLOYMENT_REPAIR_TIMEOUT_MINUTES} Minutes ago, therefore "
+                         f"it is considered to be stuck...")
+                return False
+        lg.debug(f'Deployment currently in progress, started at: {data["deployment_start"]}')
+        return True
 
     def __check_preconditions(self, message: str) -> bool:
         """
