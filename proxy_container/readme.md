@@ -3,10 +3,10 @@
 This folder contains all files related to the modified Zabbix Proxy Docker Image.
 
 - SNMP MIB files that need to be available in the Zabbix Proxy can be added to the `src/snmp_mibs` folder.
-- External Scripts can be added to the `src/external:scripts` folder. Supported are bash or python scripts.
+- External Scripts can be added to the `src/external_scripts` folder. Supported are bash or python scripts.
 - The Dockerfile also installs python3.9 and all dependencies specified in the `requirements.txt` file.
 
-The following Command builds a new image for x86 and arm64:
+The following Command builds a new image for x86 and arm64v8:
 ````
 docker buildx build --platform linux/amd64,linux/arm64 -t noahnc/smartmonitoring-proxy:<zabbix-version>-<revision-number> --push .
 ````

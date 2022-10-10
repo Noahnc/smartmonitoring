@@ -28,7 +28,7 @@ zabbix_export:
               parameters:
                 - $.last_update
           master_item:
-            key: 'system.run[tail /var/status.json]'
+            key: 'system.run[cat /var/status.json]'
           tags:
             -
               tag: Application
@@ -47,7 +47,7 @@ zabbix_export:
               parameters:
                 - $.package_version
           master_item:
-            key: 'system.run[tail /var/status.json]'
+            key: 'system.run[cat /var/status.json]'
           tags:
             -
               tag: Application
@@ -66,7 +66,7 @@ zabbix_export:
               parameters:
                 - $.status
           master_item:
-            key: 'system.run[tail /var/status.json]'
+            key: 'system.run[cat /var/status.json]'
           tags:
             -
               tag: Application
@@ -85,7 +85,7 @@ zabbix_export:
               parameters:
                 - $.update_channel
           master_item:
-            key: 'system.run[tail /var/status.json]'
+            key: 'system.run[cat /var/status.json]'
           tags:
             -
               tag: Application
@@ -104,7 +104,7 @@ zabbix_export:
               parameters:
                 - $.error_msg
           master_item:
-            key: 'system.run[tail /var/status.json]'
+            key: 'system.run[cat /var/status.json]'
           tags:
             -
               tag: Application
@@ -159,7 +159,7 @@ zabbix_export:
               parameters:
                 - $.smartmonitoring_version
           master_item:
-            key: 'system.run[tail /var/status.json]'
+            key: 'system.run[cat /var/status.json]'
           tags:
             -
               tag: Application
@@ -167,7 +167,7 @@ zabbix_export:
         -
           uuid: af0a3308475a4ca2a4cc1f47b3fd0363
           name: metadata_json
-          key: 'system.run[tail /var/status.json]'
+          key: 'system.run[cat /var/status.json]'
           delay: 5m
           trends: '0'
           value_type: TEXT

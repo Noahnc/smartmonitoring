@@ -32,7 +32,6 @@ def replace_deployment(current_config: LocalConfig,
         raise
 
     try:
-        lg.info("Removing old containers...")
         uninstall_application(current_manifest, dock)
         lg.info("Creating new containers...")
         install_deployment(new_config, new_manifest, dock, cfh)
@@ -62,14 +61,14 @@ def __perform_fallback(cfh: DataHandler, current_config: LocalConfig, current_ma
     """
     lg.error(f"Error while deploying new containers: {e}")
     lg.info("Performing fallback to previous version...")
-    lg.debug("Removing possibly created new containers...")
+    lg.debug("Removing possibly created new containers")
     uninstall_application(new_manifest, dock)
     lg.info("Creating old containers...")
     install_deployment(current_config, current_manifest, dock, cfh)
     cfh.save_status("DeploymentError", error_msg=str(e))
     lg.info("Performing cleanup...")
     dock.perform_cleanup()
-    lg.info("Old containers successfully created...")
+    lg.info("Old containers successfully created")
 
 
 def install_deployment(config: LocalConfig,
