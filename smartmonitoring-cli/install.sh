@@ -83,8 +83,8 @@ function start_task() {
 # create and log folder
 function create_folder() {
     if [[ ! -d "$1" ]]; then
-      echo "Creating folder $1" &>>$var_install_log_file
         mkdir -p "$1"
+        echo "Created folder $1" &>>$var_install_log_file
     fi
 }
 
@@ -141,12 +141,6 @@ EOF
     chmod a+x /etc/update-motd.d/*
 }
 
-function create_folders() {
-    # Create SmartMonitoring folders
-    create_folder "$var_smartmonitoring_log_folder"
-    create_folder "$var_smartmonitoring_config_folder"
-    create_folder "$var_smartmonitoring_var_folder"
-}
 
 # generates and saves the smartmonitoring_cli local config file
 function save_smartmonitoring_files() {
@@ -204,7 +198,7 @@ Please create this proxy in the Zabbix WebPortal with the following information:
 
 Proxy Name:\e[33m $var_proxy_name\e[34m
 PSK Identity:\e[33m $var_proxy_name\e[34m
-256bit PSK Key:\e[33m
+256bit PSK:\e[33m
 $var_psk_key\e[34m
 
 Also create the following host object in Zabbix:
@@ -237,6 +231,9 @@ function set_ubuntu_settings(){
 ##############################################################################################################
 ########################################## Script entry point ################################################
 ##############################################################################################################
+
+# Create log folder
+create_folder "$var_smartmonitoring_log_folder"
 
 # Check if executed on Ubuntu Linux and if not, exit.
 if ! [[ -f /etc/lsb-release ]]; then
@@ -276,6 +273,8 @@ This script can be terminated any time with Ctrl+C.
 if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
 
     ############################ Perform new installation ############################
+    create_folder "$var_smartmonitoring_config_folder"
+    create_folder "$var_smartmonitoring_var_folder"
 
     # Ask for Customer Name by CLI input
     var_location=
@@ -309,7 +308,6 @@ if ! [[ -f "/usr/local/bin/smartmonitoring" ]]; then
     # Start installation tasks
     echo ""
     echo "################################ Perform Installation ############################################"
-    create_folders
     perform_operation "set_ubuntu_settings" "Set Ubuntu settings..."
     perform_operation "apt-get update" "Update apt cache..."
 
