@@ -83,7 +83,7 @@ function start_task() {
 # create and log folder
 function create_folder() {
     if [[ ! -d "$1" ]]; then
-      echo "Creating folder $1"
+      echo "Creating folder $1" &>>$var_install_log_file
         mkdir -p "$1"
     fi
 }

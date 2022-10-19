@@ -110,14 +110,15 @@ def prepare_cli(action: str, verbose: bool, silent: bool, only_critical: bool = 
     :return: MainLogic object
     """
     main_logic = MainLogic()
-    command_executer(verbose, silent, main_logic.setup_logging, verbose, silent, only_critical)
+    command_executer(verbose, silent, main_logic.setup_logging, verbose, silent, only_critical, print_finish=False)
     lh.log_start(action)
     return main_logic
 
 
-def command_executer(verbose: bool, silent: bool, function, *args) -> None:
+def command_executer(verbose: bool, silent: bool, function, *args, print_finish: bool = True) -> None:
     """
     Execute a function and handle errors.
+    :param print_finish: Prints a finish message at after the function has been executed
     :param verbose: Prints a stack trace if an error occurs
     :param silent: When True, stack trace is logged with built-in logging module, otherwise with Rich
     :param function: Function to execute
@@ -137,4 +138,4 @@ def command_executer(verbose: bool, silent: bool, function, *args) -> None:
             lg.info('Run the command with the --verbose flag to get more information.')
         exit_with_error(1)
     finally:
-        lh.log_finish()
+        if print_finish: lh.log_finish()
