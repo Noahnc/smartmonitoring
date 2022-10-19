@@ -67,7 +67,7 @@ class MainLogic:
         try:
             config, manifest = self.cfh.get_installed_stack()
         except InstalledStackInvalid as e:
-            lg.critical(f'Error loading Config to update file logger: {e}')
+            lg.critical(f'Error loading Config to update file-logger: {e}')
             lh.update_file_logger(level="DEBUG")
             return
         if config.debug_logging:
@@ -130,7 +130,7 @@ class MainLogic:
         Validate the local config file and apply it if changes are present.
         :param silent: Apply changes without asking for confirmation
         """
-        if not self.__check_preconditions("skip applying new configuration..."):
+        if not self.__check_preconditions("applying new configuration skipped"):
             return
         current_config, manifest = self.cfh.get_installed_stack()
         try:
@@ -147,9 +147,9 @@ class MainLogic:
             lg.warning("No changes found in local config, nothing to apply...")
             return
         if not silent and not cli.print_and_confirm_changes(changes):
-            lg.info("Skipped applying new configuration...")
+            lg.info("Applying new configuration skipped")
             return
-        lg.info("Applying new local configuration...")
+        lg.info("Applying new local configuration")
         deph.replace_deployment(current_config, new_config, manifest, manifest, self.cfh, DockerHandler())
 
     def print_status(self, disable_refresh: bool, banner_version: bool) -> None:
@@ -175,24 +175,24 @@ class MainLogic:
 
     def restart_application(self) -> None:
         """Restarts all containers of the current deployment."""
-        if not self.__check_preconditions("skipping restart..."):
+        if not self.__check_preconditions("restart skipped"):
             return
 
-        lg.info("Restarting smartmonitoring deployment...")
+        lg.info("Restarting smartmonitoring deployment")
         config, manifest = self.cfh.get_installed_stack()
         dock = DockerHandler()
         dock.restart_containers(manifest.containers)
-        lg.info("All containers restarted successfully...")
+        lg.info("All containers restarted successfully")
 
     def deploy_application(self) -> None:
         """Creates the initial Deployment."""
         if self.__check_if_deployed():
-            lg.warning("SmartMonitoring is already deployed, skipping deployment...")
+            lg.warning("SmartMonitoring is already deployed, deployment skipped")
             return
         if not hf.check_internet_connection():
-            lg.error("No internet connection, skipping deployment...")
+            lg.error("No internet connection, deployment skipped")
             return
-        lg.info("Deploying smartmonitoring application to this system...")
+        lg.info("Performing SmartMonitoring deployment to local docker host")
         lg.info("Retrieving local configuration and update manifest...")
         config, manifest = self.cfh.get_config_and_manifest()
         dock = DockerHandler()
@@ -204,16 +204,16 @@ class MainLogic:
             deph.install_deployment(config, manifest, dock, self.cfh)
             self.cfh.save_installed_stack(config, manifest)
             self.cfh.save_status("Deployed", upd_channel=config.update_channel, pkg_version=manifest.package_version)
-            lg.info("SmartMonitoring application successfully deployed...")
+            lg.info("SmartMonitoring application successfully deployed")
         except (ContainerCreateError, ImageDoesNotExist, ValueNotFoundInConfig) as e:
             self.cfh.save_status(status="DeploymentError", error_msg=str(e))
             raise e
 
     def remove_application(self) -> None:
         """Removes the current Deployment."""
-        if not self.__check_preconditions("skipping removal..."):
+        if not self.__check_preconditions("removal skipped"):
             return
-        lg.info("Removing smartmonitoring deployment from this system...")
+        lg.info("Removing SmartMonitoring deployment from local docker host")
         config, manifest = self.cfh.get_installed_stack()
         dock = DockerHandler()
         deph.uninstall_application(manifest, dock)
@@ -227,10 +227,10 @@ class MainLogic:
         Updates the current Deployment if a new version is available in the manifest.
         :param force: Applies the manifest version even if the version is not newer than the current version
         """
-        if not self.__check_preconditions("skipping update..."):
+        if not self.__check_preconditions("update skipped"):
             return
         if not hf.check_internet_connection():
-            lg.error("No internet connection, skipping update...")
+            lg.error("No internet connection, update skipped")
             return
 
         lg.info("Retrieving local configuration and update manifest...")
@@ -239,13 +239,13 @@ class MainLogic:
 
         if not force and not self.__check_version_is_newer(current_manifest.package_version,
                                                            new_manifest.package_version):
-            lg.warning("No newer SmartMonitoring Deployment is available, skipping update...")
+            lg.warning("No newer SmartMonitoring Deployment is available, update skipped")
             return
         if force or self.__check_version_is_newer(current_manifest.package_version, new_manifest.package_version):
             lg.info(
-                f"Update SmartMonitoring from {current_manifest.package_version} to {new_manifest.package_version}...")
+                f"Update SmartMonitoring Deployment from {current_manifest.package_version} to {new_manifest.package_version}")
             if deph.replace_deployment(config, config, current_manifest, new_manifest, self.cfh, DockerHandler()):
-                lg.info(f"SmartMonitoring successfully updated to version {new_manifest.package_version}")
+                lg.info(f"SmartMonitoring Deployment successfully updated to version {new_manifest.package_version}")
 
     def __check_version_is_newer(self, current_version: str, new_version: str) -> bool:
         """
@@ -270,12 +270,12 @@ class MainLogic:
         Checks if the application is already deployed.
         :return: True if the application is deployed, False otherwise
         """
-        lg.debug("Checking if smartmonitoring application is already deployed...")
+        lg.debug("Checking if SmartMonitoring deployment can be found on local docker host...")
         if self.stack_file.exists():
-            lg.debug("SmartMonitoring application is deployed on this system...")
+            lg.debug("SmartMonitoring deployment found on local docker host")
             return True
         else:
-            lg.debug("SmartMonitoring application is not deployed on this system...")
+            lg.debug("SmartMonitoring deployment not found on local docker host")
             return False
 
     def __check_if_deployment_in_progress(self) -> bool:
@@ -285,8 +285,9 @@ class MainLogic:
         be stuck and False is returned.
         :return: True if the application is currently being deployed, False otherwise
         """
+        lg.debug("Checking if SmartMonitoring deployment is currently in progress...")
         if not self.status_file.exists():
-            lg.debug("No deployment in progress...")
+            lg.debug("No deployment in progress")
             return False
 
         data = self.cfh.get_status()
@@ -298,7 +299,7 @@ class MainLogic:
             error_time = datetime.strptime(data["deployment_start"], "%Y-%m-%d %H:%M:%S") + timedelta(minutes=cs.DEPLOYMENT_REPAIR_TIMEOUT_MINUTES)
             if error_time < datetime.now():
                 lg.debug(f"Last deployment started over {cs.DEPLOYMENT_REPAIR_TIMEOUT_MINUTES} Minutes ago, therefore "
-                         f"it is considered to be stuck...")
+                         f"it is considered to be stuck and no longer in progress")
                 return False
         lg.debug(f'Deployment currently in progress, started at: {data["deployment_start"]}')
         return True

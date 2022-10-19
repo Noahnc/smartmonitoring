@@ -125,7 +125,7 @@ class DockerHandler:
         :param container_name: Name of the container as string
         """
         try:
-            lg.info(f'Starting Container {container_name}')
+            lg.info(f'Starting Container {container_name}...')
             container = self.get_container(container_name)
             container.start()
             lg.debug(f'Container {container_name} started')
@@ -140,7 +140,7 @@ class DockerHandler:
         """
         try:
             container = self.get_container(container_name)
-            lg.info(f'Stopping container {container_name}')
+            lg.info(f'Stopping container {container_name}...')
             container.stop()
             lg.debug(f'Container {container_name} stopped')
         except NotFound:
@@ -155,7 +155,7 @@ class DockerHandler:
         :param container_name: Name of the container as string
         """
         try:
-            lg.info(f'Restarting container {container_name}')
+            lg.info(f'Restarting container {container_name}...')
             container = self.get_container(container_name)
             container.restart()
             lg.debug(f'Container {container_name} restarted')
@@ -203,7 +203,7 @@ class DockerHandler:
         """
         try:
             container = self.get_container(container_name)
-            lg.info(f'Removing container {container_name}')
+            lg.info(f'Removing container {container_name}...')
             container.remove(force=True)
         except NotFound:
             lg.debug(f'Skipping removal of container {container_name} because it does not exist')
@@ -302,7 +302,7 @@ class DockerHandler:
         """
         if not self.__check_if_image_exists(image):
             try:
-                lg.info(f'Pulling image {image} from docker hub')
+                lg.info(f'Pulling image {image} from docker hub...')
                 self.client.images.pull(image)
                 lg.debug(f'Image {image} pulled from docker hub')
             except APIError as e:

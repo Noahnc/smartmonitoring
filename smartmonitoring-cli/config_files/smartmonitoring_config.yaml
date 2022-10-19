@@ -11,8 +11,8 @@ SmartMonitoring_Proxy:
 
     # With local settings, you can override static configurations from the manifest.
     # A variable specified here takes precedence over the one from the manifest.
-    #local_settings:
-      #ZBX_DEBUGEVEL: 3
+    local_settings:
+      ZBX_DEBUGLEVEL: 1
 
   zabbix_agent_container:
     smartmonitoring_status_file: "/Users/noahcanadea/Documents/GitHub/smartmonitoring/smartmonitoring-cli/temp/update-status.json"
