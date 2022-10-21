@@ -8,7 +8,7 @@ This folder contains all files related to the modified Zabbix Proxy Docker Image
 
 The following Command builds a new image for x86 and arm64v8:
 ````
-docker buildx build --platform linux/amd64,linux/arm64 -t noahnc/smartmonitoring-proxy:<zabbix-version>-<revision-number> --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t btcadmin/smartmonitoring_proxy:<zabbix-version>-<revision-number> --push .
 ````
 Version for the image should be set as following: `<zabbix-version>-<revision-number>`
 whereas "zabbix-version" is the Zabbix release (e.g 6.2) and "revision-number" being an increasing number.
