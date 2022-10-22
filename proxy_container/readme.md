@@ -8,14 +8,14 @@ This folder contains all files related to the modified Zabbix Proxy Docker Image
 
 The following Command builds a new image for x86 and arm64v8:
 ````
-docker buildx build --platform linux/amd64,linux/arm64 -t btcadmin/smartmonitoring_proxy:<zabbix-version>-<revision-number> --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t btcadmin/smartmonitoring-proxy:<zabbix-version>-<revision-number> --push .
 ````
 Version for the image should be set as following: `<zabbix-version>-<revision-number>`
 whereas "zabbix-version" is the Zabbix release (e.g 6.2) and "revision-number" being an increasing number.
 
 The following example builds an image for Zabbix 6.0 with revision number 01:
 ````
-docker buildx build --platform linux/amd64,linux/arm64 -t noahnc/smartmonitoring-proxy:6.0-01 --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t btcadmin/smartmonitoring-proxy:6.0-01 --push .
 ````
 
 To update to a new Zabbix Proxy Version, the following line in the Dockerfile has to be changed to the new version:

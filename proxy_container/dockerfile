@@ -1,4 +1,4 @@
-# Zabbix base Proxy MySQL container
+# Zabbix base Proxy image
 # https://hub.docker.com/r/zabbix/zabbix-proxy-mysql
 FROM zabbix/zabbix-proxy-mysql:6.0-ubuntu-latest
 
@@ -12,22 +12,23 @@ USER root
 # Copy scripts to container and make them executable
 WORKDIR /usr/lib/zabbix/externalscripts/
 COPY src/external_scripts/ ./
-
-RUN find /usr/lib/zabbix/externalscripts/ -type f -iname "*.sh" -exec chmod +x {} \;
-RUN find /usr/lib/zabbix/externalscripts/ -type f -iname "*.py" -exec chmod +x {} \;
-
-# Install required packages
-RUN apt-get update
-RUN apt-get install python3.9 -y && apt-get install pip -y
-RUN apt clean
+RUN find /usr/lib/zabbix/externalscripts/ -type f -iname "*.sh" -exec chmod +x {} \; && \
+    find /usr/lib/zabbix/externalscripts/ -type f -iname "*.py" -exec chmod +x {} \;
 
 # install python packages defined in requirements.txt
 WORKDIR /
 COPY requirements.txt ./
-RUN pip install -r requirements.txt
-RUN rm requirements.txt
 
-# change user to zabbix (user id based on official zabbix docker file)
+# Install required packages and perfrom cleanup
+RUN apt-get update && apt-get install -y \
+    python3.9 \
+    pip \
+    && pip install -r requirements.txt --no-cache-dir \
+    && rm requirements.txt \
+    && apt-get clean  \
+    && rm -rf /var/lib/apt/lists/*
+
+# change user back to zabbix (user id based on official zabbix docker file)
 USER 1997
 
 
