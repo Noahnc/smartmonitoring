@@ -1,7 +1,7 @@
 # SmartMonitoring
 This repository contains all files associated with the SmartMonitoring project.
 SmartMonitoring is a deployment solution for Zabbix Proxy's.
-A Zabbix Proxy Deployment is defined in an update manifest file, that is publicly available over the internet.
+A Zabbix Proxy Deployment is defined in an update manifest file that is publicly available over the internet.
 To update configuration or Zabbix version for all Proxy's, you can change the update manifest and therefore update all Proxy's at once.
 
 # Folder Structure

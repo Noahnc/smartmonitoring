@@ -1,6 +1,6 @@
 # Zabbix Proxy Docker Image
 
-This folder contains all files related to the modified Zabbix Proxy Docker Image.
+This folder contains all files related to the modified Zabbix Proxy Docker image.
 
 - SNMP MIB files that need to be available in the Zabbix Proxy can be added to the `src/snmp_mibs` folder.
 - External Scripts can be added to the `src/external_scripts` folder. Supported are bash or python scripts.
