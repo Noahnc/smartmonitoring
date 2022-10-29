@@ -25,7 +25,7 @@ Apply a modified local config:
 ````
 smartmonitoring apply-config <--verbose> <--silent>
 ````
-![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/apply-config.gif)
+![](https://github.com/Noahnc/smartmonitoring/blob/release/asset/apply-config.gif)
 
 \
 Shows a Dashboard with usefully information about the Host and the current Deployment:
