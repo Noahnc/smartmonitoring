@@ -32,21 +32,21 @@ Shows a Dashboard with usefully information about the Host and the current Deplo
 ````
 smartmonitoring status <--verbose> <--disable-refresh> <--banner-version>
 ````
-![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/status-dashboard.gif)
+![](https://github.com/Noahnc/smartmonitoring/blob/release/asset/status-dashboard.gif)
 
 \
 Checks if a new SmartMonitoring Deployment is available and deploys it if so:
 ````
 smartmonitoring update <--verbose> <--silent> <--force>
 ````
-![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/update.gif)
+![](https://github.com/Noahnc/smartmonitoring/blob/release/asset/update.gif)
 
 \
 Checks the local config file and the manifest for errors:
 ````
 smartmonitoring validate-config <--verbose>
 ````
-![](https://github.com/Noahnc/smartmonitoring/blob/main/asset/validate-config.gif)
+![](https://github.com/Noahnc/smartmonitoring/blob/release/asset/validate-config.gif)
 \
 The following command perform an initial deployment based on the manifest:
 ````
